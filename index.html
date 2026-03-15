@@ -1,0 +1,3514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STICKMEN - Trading Cards</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #e94560 0%, #ff6b35 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(233,69,96,0.4);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Bangers', cursive;
+            font-size: 2.5rem;
+            letter-spacing: 3px;
+            color: #fff;
+            text-shadow: 3px 3px 0 #00000044;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon { width: 45px; height: 45px; }
+
+        .wallet {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #00000033;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: #16213e;
+            border-bottom: 2px solid #0f3460;
+        }
+
+        nav button {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 0.6rem 1.5rem;
+            border: 2px solid transparent;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #1a1a2e;
+            color: #8892b0;
+        }
+
+        nav button:hover { color: #fff; border-color: #e94560; }
+        nav button.active {
+            background: #e94560;
+            color: #fff;
+            border-color: #e94560;
+            box-shadow: 0 0 15px #e9456055;
+        }
+
+        .page { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .page.active { display: block; }
+
+        .page-title {
+            font-family: 'Bangers', cursive;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle { color: #8892b0; margin-bottom: 1.5rem; }
+
+        /* ===== SHOP ===== */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .pack {
+            background: linear-gradient(145deg, #16213e, #1a1a3e);
+            border: 2px solid #0f3460;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pack:hover {
+            transform: translateY(-5px);
+            border-color: #e94560;
+            box-shadow: 0 10px 30px #e9456033;
+        }
+
+        .pack-art {
+            width: 160px;
+            height: 220px;
+            margin: 0 auto 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pack-name { font-family: 'Bangers', cursive; font-size: 1.5rem; letter-spacing: 2px; margin-bottom: 0.3rem; }
+        .pack-desc { color: #8892b0; font-size: 0.9rem; margin-bottom: 1rem; }
+        .pack-price {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #e94560;
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .pack-cards { color: #8892b0; font-size: 0.85rem; margin-top: 0.5rem; }
+
+        @keyframes legendaryShine {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* ===== PACK OPENING ===== */
+        .pack-opening-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #000000ee;
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .pack-opening-overlay.active { display: flex; }
+
+        .opening-pack {
+            width: 200px;
+            height: 280px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.5s;
+        }
+
+        .opening-pack.shake { animation: packShake 0.5s ease; }
+        .opening-pack.rip { animation: packRip 0.8s ease forwards; }
+
+        @keyframes packShake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg) scale(1.05); }
+            75% { transform: rotate(5deg) scale(1.05); }
+        }
+
+        @keyframes packRip {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 1; filter: brightness(2); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .opening-instruction {
+            color: #8892b0;
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            font-weight: 700;
+            animation: pulse 1.5s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .revealed-cards {
+            display: none;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 1rem;
+            max-width: 1000px;
+        }
+
+        .revealed-cards.active { display: flex; }
+
+        .revealed-card-wrap { animation: cardReveal 0.6s ease backwards; }
+
+        @keyframes cardReveal {
+            from { transform: scale(0) rotateY(180deg); opacity: 0; }
+            to { transform: scale(1) rotateY(0deg); opacity: 1; }
+        }
+
+        .close-reveal {
+            margin-top: 1.5rem;
+            padding: 0.8rem 2rem;
+            background: #e94560;
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: none;
+        }
+        .close-reveal.active { display: block; }
+
+        /* ===== CARDS ===== */
+        .card {
+            width: 200px;
+            height: 300px;
+            border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 20px #00000055;
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+
+        .card:hover { transform: scale(1.05); }
+
+        .card-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .card-bg.common { background: linear-gradient(145deg, #2d3748, #4a5568); }
+        .card-bg.uncommon { background: linear-gradient(145deg, #0f3460, #16213e); }
+        .card-bg.rare { background: linear-gradient(145deg, #533483, #e94560); }
+        .card-bg.epic { background: linear-gradient(145deg, #e94560, #ff6b35); }
+        .card-bg.legendary {
+            background: linear-gradient(145deg, #ffd700, #ff6b35, #e94560, #533483);
+            background-size: 400% 400%;
+            animation: legendaryShine 3s ease infinite;
+        }
+
+        .card-inner {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 0.6rem 0.8rem;
+        }
+
+        .card-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .card-number-big {
+            font-family: 'Bangers', cursive;
+            font-size: 1.6rem;
+            color: #fff;
+            text-shadow: 2px 2px 4px #00000088;
+            line-height: 1;
+        }
+
+        .card-rarity {
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            background: #00000044;
+        }
+
+        .card-stickman {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-stickman svg {
+            width: 120px;
+            height: 130px;
+            filter: drop-shadow(2px 2px 4px #00000066);
+        }
+
+        .card-info {
+            background: #00000055;
+            border-radius: 8px;
+            padding: 0.5rem 0.6rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .card-name {
+            font-family: 'Bangers', cursive;
+            font-size: 1.05rem;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-category {
+            font-size: 0.65rem;
+            color: #ffffffaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 0.3rem;
+        }
+
+        .card-stat { text-align: center; }
+        .card-stat .stat-val { font-weight: 900; font-size: 0.85rem; color: #ffd700; }
+        .card-stat .stat-label { color: #ffffff88; font-size: 0.55rem; text-transform: uppercase; }
+
+        .card-series {
+            position: absolute;
+            bottom: 0.3rem;
+            right: 0.6rem;
+            font-size: 0.55rem;
+            color: #ffffff44;
+            font-weight: 700;
+        }
+
+        .card.legendary-glow { box-shadow: 0 0 30px #ffd70066, 0 0 60px #ffd70033; }
+        .card.epic-glow { box-shadow: 0 0 20px #e9456066; }
+        .card.rare-glow { box-shadow: 0 0 15px #bc8cff44; }
+
+        /* ===== COLLECTION ===== */
+        .collection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .collection-count { color: #8892b0; font-size: 1rem; }
+
+        .filter-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+        .filter-btn {
+            padding: 0.4rem 1rem;
+            border: 1px solid #30363d;
+            border-radius: 50px;
+            background: #16213e;
+            color: #8892b0;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .filter-btn.active { background: #e94560; color: #fff; border-color: #e94560; }
+
+        .collection-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+
+        .empty-collection {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #8892b0;
+        }
+
+        .empty-collection .big-icon { font-size: 4rem; margin-bottom: 1rem; }
+
+        /* ===== SEARCH BAR ===== */
+        .search-bar-wrap {
+            display: flex;
+            align-items: center;
+            background: #16213e;
+            border: 2px solid #0f3460;
+            border-radius: 50px;
+            padding: 0.6rem 1.2rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .search-bar-wrap:focus-within {
+            border-color: #e94560;
+            box-shadow: 0 0 15px #e9456033;
+        }
+
+        .search-icon { font-size: 1.2rem; margin-right: 0.6rem; }
+
+        .search-input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: #eee;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .search-input::placeholder { color: #8892b066; }
+
+        .search-clear {
+            background: none;
+            border: none;
+            color: #8892b0;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+            display: none;
+        }
+
+        .search-clear.visible { display: block; }
+
+        .search-tags {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.2rem;
+        }
+
+        .tag {
+            padding: 0.3rem 0.8rem;
+            border: 1px solid #30363d;
+            border-radius: 50px;
+            background: #1a1a2e;
+            color: #8892b0;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag:hover { border-color: #e94560; color: #fff; }
+        .tag.active { background: #e94560; color: #fff; border-color: #e94560; }
+
+        .shop-results {
+            color: #8892b0;
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+            min-height: 1.2rem;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #8892b0;
+        }
+
+        .no-results .big-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+
+        /* ===== COIN SHOP ===== */
+        .coin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .coin-pack {
+            background: linear-gradient(145deg, #16213e, #1a1a3e);
+            border: 2px solid #0f3460;
+            border-radius: 16px;
+            padding: 1.8rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .coin-pack:hover {
+            transform: translateY(-5px);
+            border-color: #ffd700;
+            box-shadow: 0 10px 30px #ffd70033;
+        }
+
+        .coin-pack.best-value { border-color: #3fb950; }
+        .coin-pack.best-value::after {
+            content: 'BEST VALUE';
+            position: absolute;
+            top: 12px;
+            right: -30px;
+            background: #3fb950;
+            color: #000;
+            font-size: 0.65rem;
+            font-weight: 900;
+            padding: 0.2rem 2rem;
+            transform: rotate(35deg);
+            letter-spacing: 1px;
+        }
+
+        .coin-pack.popular { border-color: #e94560; }
+        .coin-pack.popular::after {
+            content: 'POPULAR';
+            position: absolute;
+            top: 12px;
+            right: -30px;
+            background: #e94560;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 900;
+            padding: 0.2rem 2rem;
+            transform: rotate(35deg);
+            letter-spacing: 1px;
+        }
+
+        .coin-icon-big {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .coin-amount {
+            font-family: 'Bangers', cursive;
+            font-size: 2rem;
+            color: #ffd700;
+            letter-spacing: 2px;
+        }
+
+        .coin-bonus {
+            color: #3fb950;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            min-height: 1.2rem;
+        }
+
+        .coin-price-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700, #ff6b35);
+            color: #000;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 1.1rem;
+            padding: 0.6rem 1.8rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px #ffd70044;
+        }
+
+        .coin-price-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px #ffd70066;
+        }
+
+        .coin-what-you-get {
+            color: #8892b0;
+            font-size: 0.8rem;
+            margin-top: 0.8rem;
+        }
+
+        .coin-what-you-get strong { color: #ffd700; }
+
+        .free-coins-section {
+            margin-top: 2.5rem;
+            background: linear-gradient(145deg, #16213e, #1a1a3e);
+            border: 2px solid #0f3460;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .free-coins-section h3 {
+            font-family: 'Bangers', cursive;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            color: #3fb950;
+        }
+
+        .free-coin-options {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .free-option {
+            background: #1a1a2e;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            text-align: center;
+            min-width: 160px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .free-option:hover {
+            border-color: #3fb950;
+            transform: translateY(-3px);
+        }
+
+        .free-option.claimed {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #30363d;
+            transform: none;
+        }
+
+        .free-option .fo-icon { font-size: 2rem; margin-bottom: 0.3rem; }
+        .free-option .fo-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+        .free-option .fo-reward { color: #ffd700; font-weight: 700; font-size: 0.9rem; }
+        .free-option .fo-desc { color: #8892b0; font-size: 0.75rem; margin-top: 0.2rem; }
+
+        /* Purchase confirmation modal */
+        .purchase-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #000000dd;
+            z-index: 250;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .purchase-modal.active { display: flex; }
+
+        .purchase-modal-box {
+            background: #16213e;
+            border: 2px solid #ffd700;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: modalPop 0.3s ease;
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .purchase-modal-box .pm-icon { font-size: 4rem; margin-bottom: 0.5rem; }
+        .purchase-modal-box .pm-title {
+            font-family: 'Bangers', cursive;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            color: #ffd700;
+            margin-bottom: 0.5rem;
+        }
+        .purchase-modal-box .pm-desc { color: #8892b0; margin-bottom: 1.5rem; }
+
+        .pm-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .pm-btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pm-btn.confirm {
+            background: linear-gradient(135deg, #ffd700, #ff6b35);
+            color: #000;
+        }
+
+        .pm-btn.cancel {
+            background: #2d3748;
+            color: #8892b0;
+        }
+
+        .pm-btn:hover { transform: scale(1.05); }
+
+        .coin-rain {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 260;
+            overflow: hidden;
+        }
+
+        .coin-rain .falling-coin {
+            position: absolute;
+            font-size: 1.5rem;
+            animation: coinFall 1.5s ease-in forwards;
+        }
+
+        @keyframes coinFall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* ===== AUTH / ACCOUNT ===== */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #000000dd;
+            z-index: 250;
+            justify-content: center;
+            align-items: center;
+        }
+        .auth-modal.active { display: flex; }
+
+        .auth-box {
+            background: #16213e;
+            border: 2px solid #e94560;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: modalPop 0.3s ease;
+        }
+
+        .auth-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            width: 100%;
+            padding: 0.8rem 1.5rem;
+            border: 2px solid #30363d;
+            border-radius: 12px;
+            background: #fff;
+            color: #333;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .auth-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px #00000033; }
+
+        .auth-btn.google { background: #fff; color: #333; }
+        .auth-btn.apple { background: #000; color: #fff; border-color: #000; }
+
+        .auth-btn svg { width: 20px; height: 20px; }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            color: #8892b0;
+            font-size: 0.85rem;
+        }
+
+        .auth-divider::before, .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #30363d;
+        }
+
+        .user-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #e94560;
+            object-fit: cover;
+            background: #21262d;
+        }
+
+        .user-name {
+            font-weight: 700;
+            font-size: 0.85rem;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Account page */
+        .account-card {
+            background: #16213e;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .account-card h3 {
+            font-family: 'Bangers', cursive;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            color: #e94560;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .form-row.single { flex-direction: column; }
+
+        .form-field {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .form-field label {
+            font-size: 0.8rem;
+            color: #8892b0;
+            font-weight: 700;
+        }
+
+        .form-field input, .form-field select {
+            padding: 0.6rem 0.8rem;
+            background: #1a1a2e;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #eee;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-field input:focus, .form-field select:focus { border-color: #e94560; }
+
+        .save-btn {
+            background: #e94560;
+            color: #fff;
+            border: none;
+            padding: 0.7rem 2rem;
+            border-radius: 50px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .save-btn:hover { transform: scale(1.05); }
+
+        .saved-badge {
+            color: #3fb950;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: none;
+            margin-left: 1rem;
+        }
+
+        /* Cards on the way overlay */
+        .shipping-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #000000ee;
+            z-index: 260;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .shipping-overlay.active { display: flex; }
+
+        .shipping-icon {
+            font-size: 5rem;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .shipping-title {
+            font-family: 'Bangers', cursive;
+            font-size: 2.2rem;
+            letter-spacing: 3px;
+            color: #3fb950;
+            margin: 1rem 0 0.5rem;
+        }
+
+        .shipping-desc {
+            color: #8892b0;
+            max-width: 400px;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .shipping-cards-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            max-width: 500px;
+        }
+
+        .shipping-card-tag {
+            padding: 0.3rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 600px) {
+            .form-row { flex-direction: column; }
+            .user-name { display: none; }
+        }
+
+        /* ===== IDEAS ===== */
+        .idea-card {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .idea-card:hover { border-color: #30363d; }
+
+        .idea-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.6rem;
+        }
+
+        .idea-user {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .idea-user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #21262d;
+            border: 1px solid #30363d;
+            object-fit: cover;
+        }
+
+        .idea-user-name { font-weight: 700; font-size: 0.9rem; }
+        .idea-time { color: #484f58; font-size: 0.75rem; }
+
+        .idea-title {
+            font-family: 'Bangers', cursive;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            margin-bottom: 0.3rem;
+        }
+
+        .idea-body {
+            color: #b0b8c8;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 0.8rem;
+        }
+
+        .idea-tags {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.8rem;
+        }
+
+        .idea-tag {
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .idea-footer {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .idea-vote-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 50px;
+            padding: 0.4rem 1rem;
+            color: #8892b0;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .idea-vote-btn:hover { border-color: #3fb950; color: #3fb950; }
+        .idea-vote-btn.voted { background: #3fb95022; border-color: #3fb950; color: #3fb950; }
+
+        .idea-reply-btn {
+            background: none;
+            border: none;
+            color: #8892b0;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .idea-reply-btn:hover { color: #58a6ff; }
+
+        .idea-replies {
+            margin-top: 0.8rem;
+            padding-left: 1.5rem;
+            border-left: 2px solid #21262d;
+        }
+
+        .idea-reply {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid #21262d11;
+        }
+
+        .idea-reply:last-child { border-bottom: none; }
+
+        .reply-user { font-weight: 700; font-size: 0.85rem; color: #58a6ff; }
+        .reply-text { font-size: 0.85rem; color: #b0b8c8; margin-top: 0.2rem; }
+        .reply-time { font-size: 0.7rem; color: #484f58; }
+
+        .reply-input-wrap {
+            display: none;
+            margin-top: 0.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .reply-input-wrap.active { display: flex; gap: 0.5rem; }
+
+        .reply-input-wrap input {
+            flex: 1;
+            padding: 0.5rem 0.8rem;
+            background: #1a1a2e;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #eee;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .reply-send-btn {
+            padding: 0.5rem 1rem;
+            background: #58a6ff;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .idea-delete-btn {
+            background: none;
+            border: none;
+            color: #484f58;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .idea-delete-btn:hover { color: #f85149; }
+
+        .no-ideas {
+            text-align: center;
+            padding: 3rem;
+            color: #8892b0;
+        }
+
+        .no-ideas .big-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #e94560;
+            color: #fff;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            z-index: 300;
+            transition: transform 0.3s;
+            box-shadow: 0 5px 20px #e9456055;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ===== ADMIN / CARD ART STUDIO ===== */
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1.2rem;
+            justify-items: center;
+        }
+
+        .admin-card {
+            width: 160px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .admin-card-art {
+            width: 160px;
+            height: 200px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #16213e;
+            border: 3px dashed #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .admin-card-art:hover {
+            border-color: #e94560;
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px #e9456033;
+        }
+
+        .admin-card-art.has-image {
+            border-style: solid;
+            border-color: #3fb950;
+        }
+
+        .admin-card-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .admin-card-art svg {
+            width: 90px;
+            height: 100px;
+            opacity: 0.6;
+        }
+
+        .admin-tap-hint {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #000000aa;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .admin-card-art:hover .admin-tap-hint { opacity: 1; }
+
+        .admin-card-art.has-image .admin-tap-hint-text::after { content: 'Tap to change'; }
+        .admin-card-art:not(.has-image) .admin-tap-hint-text::after { content: 'Tap to add picture'; }
+
+        .admin-card-name {
+            font-family: 'Bangers', cursive;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
+        }
+
+        .admin-card-num {
+            font-size: 0.8rem;
+            color: #8892b0;
+        }
+
+        .admin-remove-x {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 28px;
+            height: 28px;
+            background: #f85149;
+            color: #fff;
+            border: 3px solid #0d1117;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            transition: transform 0.2s;
+        }
+
+        .admin-remove-x:hover { transform: scale(1.2); }
+
+        .admin-card-art.dragover {
+            border-color: #ffd700 !important;
+            background: #ffd70011;
+            transform: scale(1.08);
+        }
+
+        .admin-add-icon {
+            font-size: 2.5rem;
+            opacity: 0.3;
+            margin-bottom: 0.3rem;
+        }
+
+        .admin-add-text {
+            font-size: 0.75rem;
+            color: #8892b066;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        STICKMEN
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem;">
+        <div class="wallet">
+            <span>&#x1FA99;</span>
+            <span id="balance">1000</span>
+        </div>
+        <div class="user-bar" id="user-bar" onclick="handleUserClick()">
+            <img class="user-avatar" id="user-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%238892b0'/%3E%3Ccircle cx='50' cy='110' r='45' fill='%238892b0'/%3E%3C/svg%3E" alt=""/>
+            <span class="user-name" id="user-name">Sign In</span>
+        </div>
+    </div>
+</header>
+
+<nav>
+    <button class="active" data-page="shop">Shop</button>
+    <button data-page="coins">Buy Coins</button>
+    <button data-page="collection">My Cards</button>
+    <button data-page="ideas">Ideas</button>
+    <button data-page="account">Account</button>
+</nav>
+
+<!-- SHOP PAGE -->
+<div class="page active" id="page-shop">
+    <div class="page-title">Card Shop</div>
+    <p class="page-subtitle">Rip packs and collect all 50 stickmen!</p>
+
+    <div class="search-bar-wrap">
+        <span class="search-icon">&#x1F50D;</span>
+        <input type="text" id="pack-search" class="search-input" placeholder="Search packs... (e.g. sports, ninja, legendary, cheap)" oninput="filterPacks()">
+        <button class="search-clear" id="search-clear" onclick="clearSearch()">&#x2715;</button>
+    </div>
+
+    <div class="search-tags" id="search-tags">
+        <button class="tag" onclick="searchTag('all')">All</button>
+        <button class="tag" onclick="searchTag('common')">Common</button>
+        <button class="tag" onclick="searchTag('uncommon')">Uncommon</button>
+        <button class="tag" onclick="searchTag('rare')">Rare</button>
+        <button class="tag" onclick="searchTag('legendary')">Legendary</button>
+        <button class="tag" onclick="searchTag('limited')">Limited Edition</button>
+    </div>
+
+    <div class="shop-results" id="shop-results"></div>
+    <div class="shop-grid" id="shop-grid"></div>
+</div>
+
+<!-- COIN SHOP PAGE -->
+<div class="page" id="page-coins">
+    <div class="page-title">Coin Shop</div>
+    <p class="page-subtitle">Get coins to rip more packs! Pay with Bitcoin.</p>
+
+    <!-- Payment method toggle -->
+    <div style="display:flex; justify-content:center; gap:0.5rem; margin-bottom:1.5rem;">
+        <button class="filter-btn active" id="pay-btc-btn" onclick="setPayMethod('btc')">&#x20BF; Pay with Bitcoin</button>
+        <button class="filter-btn" id="pay-free-btn" onclick="setPayMethod('free')">&#x1FA99; Free Coins</button>
+    </div>
+
+    <!-- BTC PURCHASE SECTION -->
+    <div id="btc-shop">
+        <div style="text-align:center; margin-bottom:1.2rem; padding:0.8rem; background:#21262d; border-radius:10px;">
+            <span style="color:#8892b0; font-size:0.9rem;">Rate: <strong style="color:#ffd700;">$1 = 100 coins</strong></span>
+            <span style="color:#484f58; margin:0 0.5rem;">|</span>
+            <span style="color:#8892b0; font-size:0.9rem;">BTC price auto-calculated at checkout</span>
+        </div>
+
+        <div class="coin-grid" id="coin-grid"></div>
+
+        <div style="text-align:center; margin-top:1.5rem; padding:1rem; background:#16213e; border:1px solid #f7931a44; border-radius:12px;">
+            <div style="color:#f7931a; font-family:'Bangers',cursive; font-size:1.3rem; letter-spacing:2px; margin-bottom:0.3rem;">&#x20BF; Bitcoin Payments</div>
+            <p style="color:#8892b0; font-size:0.85rem; line-height:1.5;">
+                All purchases are processed via Bitcoin. When you buy, you'll get a BTC address and QR code to send payment.
+                Coins are added to your account after you confirm. <strong style="color:#f7931a;">Stack sats while you stack stickmen!</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- FREE COINS SECTION -->
+    <div id="free-shop" style="display:none;">
+        <div class="free-coins-section" style="margin-top:0;">
+            <h3>Free Coins</h3>
+            <p class="page-subtitle" style="margin-bottom:1rem;">Earn coins without spending a dime!</p>
+            <div class="free-coin-options">
+                <div class="free-option" id="free-daily" onclick="claimDaily()">
+                    <div class="fo-icon">&#x2600;&#xFE0F;</div>
+                    <div class="fo-name">Daily Login</div>
+                    <div class="fo-reward">+200 coins</div>
+                    <div class="fo-desc">Come back every day!</div>
+                </div>
+                <div class="free-option" id="free-spin" onclick="claimSpin()">
+                    <div class="fo-icon">&#x1F3B0;</div>
+                    <div class="fo-name">Lucky Spin</div>
+                    <div class="fo-reward">+50 to +1,000</div>
+                    <div class="fo-desc">Spin every 4 hours!</div>
+                </div>
+                <div class="free-option" id="free-trivia" onclick="claimTrivia()">
+                    <div class="fo-icon">&#x1F9E0;</div>
+                    <div class="fo-name">Trivia</div>
+                    <div class="fo-reward">+150 coins</div>
+                    <div class="fo-desc">Answer a question!</div>
+                </div>
+                <div class="free-option" id="free-streak" onclick="claimStreak()">
+                    <div class="fo-icon">&#x1F525;</div>
+                    <div class="fo-name">7-Day Streak</div>
+                    <div class="fo-reward" id="streak-reward">+500 coins</div>
+                    <div class="fo-desc" id="streak-desc">Login 7 days in a row!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- COLLECTION PAGE -->
+<div class="page" id="page-collection">
+    <div class="collection-header">
+        <div>
+            <div class="page-title">My Cards</div>
+            <div class="collection-count" id="collection-count">0 cards collected</div>
+        </div>
+        <div class="filter-row">
+            <button class="filter-btn active" onclick="filterCards('all', this)">All</button>
+            <button class="filter-btn" onclick="filterCards('common', this)">Common</button>
+            <button class="filter-btn" onclick="filterCards('uncommon', this)">Uncommon</button>
+            <button class="filter-btn" onclick="filterCards('rare', this)">Rare</button>
+            <button class="filter-btn" onclick="filterCards('epic', this)">Epic</button>
+            <button class="filter-btn" onclick="filterCards('legendary', this)">Legendary</button>
+        </div>
+    </div>
+    <div class="collection-grid" id="collection-grid">
+        <div class="empty-collection">
+            <div class="big-icon">&#x1F4E6;</div>
+            <p>No cards yet! Head to the shop and rip some packs!</p>
+        </div>
+    </div>
+</div>
+
+<!-- IDEAS / SUGGESTIONS PAGE -->
+<div class="page" id="page-ideas">
+    <div class="page-title">Suggest a Stickman!</div>
+    <p class="page-subtitle">Got an idea for a new stickman? Drop it below and the community can vote!</p>
+
+    <!-- Submit form -->
+    <div class="account-card">
+        <h3>Submit Your Idea</h3>
+        <form id="idea-form" onsubmit="submitIdea(event)">
+            <div class="form-row">
+                <div class="form-field">
+                    <label>Stickman Name</label>
+                    <input type="text" id="idea-name" placeholder="e.g. Pizza Pete, Alien Al, Surfer Dude..." required maxlength="30"/>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label>Description — What should they look like?</label>
+                    <textarea id="idea-desc" placeholder="Describe the stickman! What do they wear? What do they hold? What makes them cool?" required maxlength="200" style="padding:0.6rem 0.8rem; background:#1a1a2e; border:1px solid #30363d; border-radius:8px; color:#eee; font-family:'Nunito',sans-serif; font-size:0.95rem; outline:none; resize:vertical; min-height:80px; transition:border-color 0.2s;"></textarea>
+                    <div style="font-size:0.7rem; color:#484f58; text-align:right;" id="idea-char-count">0/200</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label>What rarity should it be?</label>
+                    <select id="idea-rarity" style="padding:0.6rem 0.8rem; background:#1a1a2e; border:1px solid #30363d; border-radius:8px; color:#eee; font-family:'Nunito',sans-serif; font-size:0.95rem;">
+                        <option value="common">Common</option>
+                        <option value="uncommon" selected>Uncommon</option>
+                        <option value="rare">Rare</option>
+                        <option value="epic">Epic</option>
+                        <option value="legendary">Legendary</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label>Category</label>
+                    <input type="text" id="idea-category" placeholder="e.g. Food, Sports, Sci-Fi..." maxlength="20"/>
+                </div>
+            </div>
+            <button type="submit" class="save-btn">Post Idea</button>
+        </form>
+    </div>
+
+    <!-- Sort / Filter -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+        <div style="color:#8892b0; font-size:0.9rem;" id="ideas-count">0 ideas posted</div>
+        <div style="display:flex; gap:0.5rem;">
+            <button class="filter-btn active" onclick="sortIdeas('newest', this)">Newest</button>
+            <button class="filter-btn" onclick="sortIdeas('top', this)">Top Voted</button>
+        </div>
+    </div>
+
+    <!-- Ideas feed -->
+    <div id="ideas-feed"></div>
+</div>
+
+<!-- ACCOUNT PAGE -->
+<div class="page" id="page-account">
+    <div class="page-title">My Account</div>
+    <p class="page-subtitle" id="account-subtitle">Sign in to save your collection and get cards shipped!</p>
+
+    <div id="account-signed-out">
+        <div class="account-card" style="text-align:center; padding:3rem;">
+            <div style="font-size:3rem; margin-bottom:1rem;">&#x1F464;</div>
+            <p style="color:#8892b0; margin-bottom:1.5rem;">Sign in to save your progress and enter your shipping address for card delivery!</p>
+            <button class="save-btn" onclick="showAuthModal()">Sign In</button>
+        </div>
+    </div>
+
+    <div id="account-signed-in" style="display:none;">
+        <div class="account-card">
+            <h3>Profile</h3>
+            <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                <img class="user-avatar" id="profile-avatar" src="" alt="" style="width:60px; height:60px; font-size:1.5rem;"/>
+                <div>
+                    <div style="font-weight:700; font-size:1.1rem;" id="profile-name"></div>
+                    <div style="color:#8892b0; font-size:0.85rem;" id="profile-email"></div>
+                </div>
+            </div>
+            <button onclick="signOut()" style="background:#2d3748; color:#8892b0; border:none; padding:0.5rem 1.2rem; border-radius:8px; font-family:'Nunito',sans-serif; font-weight:700; cursor:pointer; font-size:0.85rem;">Sign Out</button>
+        </div>
+
+        <div class="account-card">
+            <h3>Shipping Address</h3>
+            <p style="color:#8892b0; font-size:0.85rem; margin-bottom:1rem;">Enter your address so we can ship your cards!</p>
+            <form id="address-form" onsubmit="saveAddress(event)">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Full Name</label>
+                        <input type="text" id="addr-name" placeholder="Greyson Lorang" required/>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Street Address</label>
+                        <input type="text" id="addr-street" placeholder="123 Main St" required/>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Apt / Suite (optional)</label>
+                        <input type="text" id="addr-apt" placeholder="Apt 4B"/>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>City</label>
+                        <input type="text" id="addr-city" placeholder="Denver" required/>
+                    </div>
+                    <div class="form-field">
+                        <label>State</label>
+                        <input type="text" id="addr-state" placeholder="CO" maxlength="2" required/>
+                    </div>
+                    <div class="form-field">
+                        <label>ZIP Code</label>
+                        <input type="text" id="addr-zip" placeholder="80202" required/>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <button type="submit" class="save-btn">Save Address</button>
+                    <span class="saved-badge" id="addr-saved">Saved!</span>
+                </div>
+            </form>
+        </div>
+
+        <div class="account-card">
+            <h3>Order History</h3>
+            <div id="order-history" style="color:#8892b0; font-size:0.9rem;">No orders yet.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ADMIN PAGE (hidden, only accessible via #admin link) -->
+<div class="page" id="page-admin">
+    <div style="text-align:center; margin-bottom:1.5rem;">
+        <div style="font-size:3rem;">&#x1F3A8;</div>
+        <div class="page-title" style="color:#e94560;">Card Art Studio</div>
+        <p class="page-subtitle" style="font-size:1.1rem;">Tap any card to change its picture!</p>
+    </div>
+
+    <div style="text-align:center; margin-bottom:1.5rem;">
+        <button onclick="clearAllCardImages()" style="background:#2d3748; color:#8892b0; border:none; padding:0.6rem 1.5rem; border-radius:50px; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.9rem; cursor:pointer;">&#x1F504; Reset All Cards</button>
+    </div>
+
+    <div class="admin-grid" id="admin-grid"></div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="auth-modal" id="auth-modal">
+    <div class="auth-box">
+        <div style="font-size:2.5rem; margin-bottom:0.5rem;">&#x1F464;</div>
+        <div style="font-family:'Bangers',cursive; font-size:1.8rem; letter-spacing:2px; margin-bottom:0.3rem;">Sign In</div>
+        <p style="color:#8892b0; margin-bottom:1.5rem; font-size:0.9rem;">Create an account to collect cards!</p>
+
+        <button class="auth-btn google" onclick="googleSignIn()">
+            <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Continue with Google
+        </button>
+
+        <button class="auth-btn apple" onclick="appleSignIn()">
+            <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            Continue with Apple
+        </button>
+
+        <div class="auth-divider">or</div>
+
+        <div style="margin-bottom:0.5rem;">
+            <input type="email" id="email-signin" placeholder="Enter your email" style="width:100%; padding:0.7rem 1rem; background:#1a1a2e; border:1px solid #30363d; border-radius:10px; color:#eee; font-family:'Nunito',sans-serif; font-size:1rem; outline:none;"/>
+        </div>
+        <button class="save-btn" style="width:100%;" onclick="emailSignIn()">Sign In with Email</button>
+
+        <p style="color:#484f58; font-size:0.7rem; margin-top:1rem;">By signing in you agree to receive your Stickmen cards!</p>
+        <button onclick="closeAuthModal()" style="background:none; border:none; color:#8892b0; cursor:pointer; margin-top:0.5rem; font-size:0.9rem; font-family:'Nunito',sans-serif;">Cancel</button>
+    </div>
+</div>
+
+<!-- SHIPPING CONFIRMATION OVERLAY -->
+<div class="shipping-overlay" id="shipping-overlay">
+    <div class="shipping-icon">&#x1F4E6;</div>
+    <div class="shipping-title">YOUR CARDS ARE ON THE WAY!</div>
+    <div class="shipping-desc">
+        We've notified the Stickmen team. Your cards will be shipped to your address on file.
+        <span id="shipping-address-preview" style="display:block; color:#58a6ff; margin-top:0.5rem; font-weight:700;"></span>
+    </div>
+    <div class="shipping-cards-list" id="shipping-cards-list"></div>
+    <button class="save-btn" onclick="closeShipping()" style="font-size:1.2rem; padding:0.8rem 2.5rem;">AWESOME!</button>
+</div>
+
+<!-- PACK OPENING OVERLAY -->
+<div class="pack-opening-overlay" id="pack-overlay">
+    <div class="opening-pack" id="opening-pack" onclick="ripPack()"></div>
+    <div class="opening-instruction" id="open-instruction">TAP TO RIP!</div>
+    <div class="revealed-cards" id="revealed-cards"></div>
+    <button class="close-reveal" id="close-reveal" onclick="closeReveal()">COLLECT ALL</button>
+</div>
+
+<!-- PURCHASE CONFIRMATION MODAL (BTC) -->
+<div class="purchase-modal" id="purchase-modal">
+    <div class="purchase-modal-box" style="max-width:450px;">
+        <div class="pm-icon" id="pm-icon">&#x20BF;</div>
+        <div class="pm-title" id="pm-title">Buy 500 Coins?</div>
+        <div class="pm-desc" id="pm-desc"></div>
+
+        <!-- BTC Payment Details -->
+        <div id="btc-payment-details" style="margin:1rem 0; text-align:center;">
+            <div style="background:#0d1117; border:1px solid #f7931a44; border-radius:10px; padding:1rem; margin-bottom:0.8rem;">
+                <div style="font-size:0.75rem; color:#8892b0; margin-bottom:0.3rem;">Send exactly:</div>
+                <div style="font-family:'Bangers',cursive; font-size:1.6rem; color:#f7931a; letter-spacing:1px;" id="pm-btc-amount">&#x20BF; 0.000014</div>
+            </div>
+            <div style="background:#0d1117; border:1px solid #30363d; border-radius:10px; padding:1rem; margin-bottom:0.8rem;">
+                <div style="font-size:0.75rem; color:#8892b0; margin-bottom:0.3rem;">To this Bitcoin address:</div>
+                <div style="font-family:monospace; font-size:0.75rem; color:#58a6ff; word-break:break-all; cursor:pointer; padding:0.3rem;" id="pm-btc-address" onclick="copyBtcAddress()">
+                    <!-- ADDRESS WILL BE SET VIA JS -->
+                </div>
+                <button onclick="copyBtcAddress()" style="margin-top:0.5rem; background:#21262d; border:1px solid #30363d; color:#8892b0; padding:0.3rem 1rem; border-radius:6px; font-size:0.8rem; cursor:pointer; font-family:'Nunito',sans-serif;">
+                    Copy Address
+                </button>
+            </div>
+            <!-- QR Code (generated via API) -->
+            <div id="pm-qr-code" style="margin:0.8rem auto; background:#fff; border-radius:8px; padding:0.5rem; display:inline-block;">
+                <img id="pm-qr-img" src="" alt="BTC QR Code" style="width:150px; height:150px; display:block;"/>
+            </div>
+            <div style="font-size:0.7rem; color:#8892b0;">Scan with any Bitcoin wallet</div>
+        </div>
+
+        <div class="pm-buttons">
+            <button class="pm-btn cancel" onclick="cancelPurchase()">Cancel</button>
+            <button class="pm-btn confirm" id="pm-confirm" onclick="executePurchase()">I've Sent the BTC!</button>
+        </div>
+        <div style="font-size:0.65rem; color:#484f58; margin-top:0.8rem;">Coins are added on confirmation. Please send the exact amount.</div>
+    </div>
+</div>
+
+<!-- COIN RAIN EFFECT -->
+<div class="coin-rain" id="coin-rain"></div>
+
+<!-- TRIVIA MODAL -->
+<div class="purchase-modal" id="trivia-modal">
+    <div class="purchase-modal-box" style="border-color:#58a6ff;">
+        <div class="pm-icon">&#x1F9E0;</div>
+        <div class="pm-title" style="color:#58a6ff;">Trivia Time!</div>
+        <div class="pm-desc" id="trivia-question"></div>
+        <div id="trivia-answers" style="display:flex; flex-direction:column; gap:0.5rem; margin-top:1rem;"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// THE 50 STICKMEN — each has a unique number, name, look & color
+// ============================================================
+const ALL_STICKMEN = [
+    // COMMON (20) — #1-20
+    { num: 1,  name: 'Basic Bob',        category: 'Everyday',   rarity: 'common',    color: '#aaa',    hat: null,          item: null,           special: null },
+    { num: 2,  name: 'Sleepy Steve',     category: 'Everyday',   rarity: 'common',    color: '#b0b0d0', hat: 'nightcap',    item: 'pillow',       special: null },
+    { num: 3,  name: 'Sporty Sam',       category: 'Sports',     rarity: 'common',    color: '#ff6b6b', hat: 'headband',    item: 'basketball',   special: null },
+    { num: 4,  name: 'Gamer Greg',       category: 'Tech',       rarity: 'common',    color: '#58a6ff', hat: 'headphones',  item: 'controller',   special: null },
+    { num: 5,  name: 'Hungry Hank',      category: 'Food',       rarity: 'common',    color: '#ffb347', hat: 'chef',        item: 'burger',       special: null },
+    { num: 6,  name: 'Skater Kyle',      category: 'Sports',     rarity: 'common',    color: '#7bed9f', hat: 'backwards',   item: 'skateboard',   special: null },
+    { num: 7,  name: 'Bookworm Betty',   category: 'School',     rarity: 'common',    color: '#dfe6e9', hat: 'glasses',     item: 'book',         special: null },
+    { num: 8,  name: 'Rainy Ray',        category: 'Weather',    rarity: 'common',    color: '#74b9ff', hat: null,          item: 'umbrella',     special: null },
+    { num: 9,  name: 'Music Mike',       category: 'Arts',       rarity: 'common',    color: '#fd79a8', hat: 'headphones',  item: 'guitar',       special: null },
+    { num: 10, name: 'Farmer Fred',      category: 'Jobs',       rarity: 'common',    color: '#c4a35a', hat: 'straw',       item: 'pitchfork',    special: null },
+    { num: 11, name: 'Soccer Sal',       category: 'Sports',     rarity: 'common',    color: '#55efc4', hat: null,          item: 'soccerball',   special: null },
+    { num: 12, name: 'Beach Bro',        category: 'Summer',     rarity: 'common',    color: '#ffeaa7', hat: 'sunglasses',  item: 'surfboard',    special: null },
+    { num: 13, name: 'Snow Stan',        category: 'Winter',     rarity: 'common',    color: '#dfe6e9', hat: 'beanie',      item: 'snowball',     special: null },
+    { num: 14, name: 'Disco Dan',        category: 'Fun',        rarity: 'common',    color: '#e056a0', hat: 'afro',        item: null,           special: 'sparkles' },
+    { num: 15, name: 'Builder Bill',     category: 'Jobs',       rarity: 'common',    color: '#fab1a0', hat: 'hardhat',     item: 'hammer',       special: null },
+    { num: 16, name: 'Artist Amy',       category: 'Arts',       rarity: 'common',    color: '#a29bfe', hat: 'beret',       item: 'paintbrush',   special: null },
+    { num: 17, name: 'Cowboy Cal',       category: 'Wild West',  rarity: 'common',    color: '#c4a35a', hat: 'cowboy',      item: 'lasso',        special: null },
+    { num: 18, name: 'Jogger Jim',       category: 'Sports',     rarity: 'common',    color: '#ff7675', hat: 'headband',    item: null,           special: 'sweat' },
+    { num: 19, name: 'Mailman Marv',     category: 'Jobs',       rarity: 'common',    color: '#636e72', hat: 'mailhat',     item: 'letter',       special: null },
+    { num: 20, name: 'Fishin Phil',      category: 'Outdoors',   rarity: 'common',    color: '#81ecec', hat: 'bucket',      item: 'fishingrod',   special: null },
+
+    // UNCOMMON (15) — #21-35
+    { num: 21, name: 'Ninja Nick',       category: 'Action',     rarity: 'uncommon',  color: '#2d3436', hat: 'ninja',       item: 'sword',        special: null },
+    { num: 22, name: 'Pirate Pete',      category: 'Adventure',  rarity: 'uncommon',  color: '#d63031', hat: 'pirate',      item: 'sword',        special: 'eyepatch' },
+    { num: 23, name: 'Chef Charlie',     category: 'Food',       rarity: 'uncommon',  color: '#fff',    hat: 'chef_tall',   item: 'frypan',       special: null },
+    { num: 24, name: 'Firefighter Flo',  category: 'Heroes',     rarity: 'uncommon',  color: '#e17055', hat: 'firehelmet',  item: 'hose',         special: null },
+    { num: 25, name: 'Smurf Stickman',   category: 'Fantasy',    rarity: 'uncommon',  color: '#0984e3', hat: 'smurf',       item: null,           special: null },
+    { num: 26, name: 'Wizard Wally',     category: 'Fantasy',    rarity: 'uncommon',  color: '#6c5ce7', hat: 'wizard',      item: 'staff',        special: 'sparkles' },
+    { num: 27, name: 'Detective Doug',   category: 'Mystery',    rarity: 'uncommon',  color: '#b2bec3', hat: 'detective',   item: 'magnifier',    special: null },
+    { num: 28, name: 'Scuba Steve',      category: 'Adventure',  rarity: 'uncommon',  color: '#00cec9', hat: 'scuba',       item: 'trident',      special: 'bubbles' },
+    { num: 29, name: 'Viking Vince',     category: 'History',    rarity: 'uncommon',  color: '#b2bec3', hat: 'viking',      item: 'axe',          special: null },
+    { num: 30, name: 'Punk Rocker',      category: 'Music',      rarity: 'uncommon',  color: '#e84393', hat: 'mohawk',      item: 'guitar',       special: null },
+    { num: 31, name: 'Zombie Zack',      category: 'Spooky',     rarity: 'uncommon',  color: '#00b894', hat: null,          item: null,           special: 'torn' },
+    { num: 32, name: 'Clown Carl',       category: 'Fun',        rarity: 'uncommon',  color: '#fdcb6e', hat: 'clown',       item: 'balloon',      special: 'rednose' },
+    { num: 33, name: 'Explorer Eve',     category: 'Adventure',  rarity: 'uncommon',  color: '#dfe6e9', hat: 'safari',      item: 'map',          special: null },
+    { num: 34, name: 'DJ Dropbeat',      category: 'Music',      rarity: 'uncommon',  color: '#a29bfe', hat: 'headphones',  item: 'turntable',    special: 'sparkles' },
+    { num: 35, name: 'Karate Kid',       category: 'Action',     rarity: 'uncommon',  color: '#fff',    hat: 'karate',      item: null,           special: 'kick' },
+
+    // RARE (8) — #36-43
+    { num: 36, name: 'Astronaut Alex',   category: 'Space',      rarity: 'rare',      color: '#dfe6e9', hat: 'astronaut',   item: 'flag',         special: 'stars' },
+    { num: 37, name: 'Robot Ricky',      category: 'Sci-Fi',     rarity: 'rare',      color: '#b2bec3', hat: 'antenna',     item: null,           special: 'bolts' },
+    { num: 38, name: 'Dragon Tamer',     category: 'Fantasy',    rarity: 'rare',      color: '#d63031', hat: null,          item: 'shield',       special: 'flames' },
+    { num: 39, name: 'King Stickman',    category: 'Royalty',    rarity: 'rare',      color: '#fdcb6e', hat: 'crown',       item: 'scepter',      special: null },
+    { num: 40, name: 'Superhero Stan',   category: 'Heroes',     rarity: 'rare',      color: '#e94560', hat: 'mask',        item: null,           special: 'cape' },
+    { num: 41, name: 'Ice Wizard',       category: 'Fantasy',    rarity: 'rare',      color: '#74b9ff', hat: 'wizard',      item: 'staff',        special: 'snowflakes' },
+    { num: 42, name: 'Quarterback GOAT', category: 'Sports',     rarity: 'rare',      color: '#fff',    hat: 'football',    item: 'football',     special: 'sparkles' },
+    { num: 43, name: 'Slam Dunk King',   category: 'Sports',     rarity: 'rare',      color: '#ff6b35', hat: 'headband',    item: 'basketball',   special: 'flames' },
+
+    // EPIC (4) — #44-47
+    { num: 44, name: 'Shadow Ninja',     category: 'Mythic',     rarity: 'epic',      color: '#2d3436', hat: 'ninja',       item: 'dual_swords',  special: 'shadow' },
+    { num: 45, name: 'Golden Knight',    category: 'Mythic',     rarity: 'epic',      color: '#ffd700', hat: 'knight',      item: 'greatsword',   special: 'sparkles' },
+    { num: 46, name: 'Thunder Bolt',     category: 'Mythic',     rarity: 'epic',      color: '#fdcb6e', hat: null,          item: 'lightning',    special: 'lightning' },
+    { num: 47, name: 'Mega Mech',        category: 'Sci-Fi',     rarity: 'epic',      color: '#e17055', hat: 'mech',        item: 'cannon',       special: 'bolts' },
+
+    // LEGENDARY (3) — #48-50
+    { num: 48, name: 'The GOAT',         category: 'Legend',     rarity: 'legendary',  color: '#ffd700', hat: 'goat_crown',  item: 'trophy',       special: 'rainbow' },
+    { num: 49, name: 'Cosmic King',      category: 'Legend',     rarity: 'legendary',  color: '#a29bfe', hat: 'cosmic',      item: 'orb',          special: 'stars' },
+    { num: 50, name: 'Inferno',          category: 'Legend',     rarity: 'legendary',  color: '#ff3838', hat: 'flamehelmet', item: 'firesword',    special: 'flames' },
+];
+
+const RARITY_COLORS = { common: '#8892b0', uncommon: '#58a6ff', rare: '#bc8cff', epic: '#e94560', legendary: '#ffd700' };
+
+// ============================================================
+// SHOP PACKS — rarity-based + limited edition holiday packs
+// ============================================================
+
+// Determine current holiday for limited edition pack
+function getCurrentHoliday() {
+    const now = new Date();
+    const month = now.getMonth() + 1; // 1-12
+    const day = now.getDate();
+
+    if (month === 1 && day <= 7) return { id: 'nye', name: "New Year's Pack", desc: "Ring in the new year! Limited edition stickmen!", icon: '&#x1F386;', gradient: 'linear-gradient(135deg, #ffd700, #533483, #58a6ff)', tags: ['holiday','new year','limited','nye'] };
+    if (month === 2 && day >= 1 && day <= 28) return { id: 'vday', name: "Valentine's Pack", desc: "Love is in the air! Heart-themed stickmen!", icon: '&#x2764;&#xFE0F;', gradient: 'linear-gradient(135deg, #e94560, #fd79a8, #e94560)', tags: ['holiday','valentine','limited','love','hearts'] };
+    if (month === 3 && day >= 1 && day <= 31) return { id: 'stpat', name: "St. Patrick's Pack", desc: "Lucky stickmen! Chase the golden leprechaun!", icon: '&#x2618;&#xFE0F;', gradient: 'linear-gradient(135deg, #00b894, #3fb950, #ffd700)', tags: ['holiday','st patrick','limited','lucky','green','shamrock'] };
+    if (month === 4 && day >= 1 && day <= 25) return { id: 'easter', name: "Easter Pack", desc: "Egg hunt stickmen! Find the golden egg!", icon: '&#x1F430;', gradient: 'linear-gradient(135deg, #a29bfe, #fd79a8, #ffeaa7)', tags: ['holiday','easter','limited','eggs','bunny'] };
+    if (month === 7 && day >= 1 && day <= 7) return { id: 'july4', name: "4th of July Pack", desc: "Freedom stickmen! Red white & blue!", icon: '&#x1F386;', gradient: 'linear-gradient(135deg, #e94560, #fff, #58a6ff)', tags: ['holiday','july 4th','limited','fireworks','america'] };
+    if (month === 10 && day >= 15) return { id: 'halloween', name: "Halloween Pack", desc: "Spooky stickmen rise! Trick or treat!", icon: '&#x1F383;', gradient: 'linear-gradient(135deg, #ff6b35, #2d3436, #00b894)', tags: ['holiday','halloween','limited','spooky','scary'] };
+    if (month === 11 && day >= 20 && day <= 30) return { id: 'thanks', name: "Thanksgiving Pack", desc: "Grateful stickmen! Feast mode activated!", icon: '&#x1F983;', gradient: 'linear-gradient(135deg, #ff6b35, #c4a35a, #e94560)', tags: ['holiday','thanksgiving','limited','feast'] };
+    if (month === 12) return { id: 'xmas', name: "Christmas Pack", desc: "Ho ho ho! Santa stickman & holiday cheer!", icon: '&#x1F384;', gradient: 'linear-gradient(135deg, #e94560, #3fb950, #ffd700)', tags: ['holiday','christmas','limited','santa','xmas'] };
+    // Default: no holiday
+    return null;
+}
+
+const currentHoliday = getCurrentHoliday();
+
+const SHOP_PACKS = [
+    // RARITY PACKS
+    { id: 'common',     name: 'Common Pack',           desc: '5 cards — all common stickmen.',                   cost: 75,   cards: 5, tags: ['common','cheap','budget','basic'],                 gradient: 'linear-gradient(145deg, #2d3748, #4a5568)',  icon: '&#x1F4E6;', emoji: true },
+    { id: 'uncommon',   name: 'Uncommon Pack',         desc: '5 cards — guaranteed uncommon or better!',         cost: 200,  cards: 5, tags: ['uncommon','mid','starter'],                       gradient: 'linear-gradient(145deg, #0f3460, #16213e)',  icon: '&#x1F4E6;', emoji: true },
+    { id: 'rare',       name: 'Rare Pack',             desc: '5 cards — guaranteed rare or better!',             cost: 500,  cards: 5, tags: ['rare','premium','good'],                          gradient: 'linear-gradient(145deg, #533483, #e94560)',  icon: '&#x2B50;', emoji: true },
+    { id: 'legendary',  name: 'Legendary Pack',        desc: '5 cards — 20% chance at a LEGENDARY!',            cost: 1000, cards: 5, tags: ['legendary','best','ultra','premium','epic'],       gradient: 'linear-gradient(145deg, #ffd700, #ff6b35, #e94560, #533483)', icon: '&#x1F451;', emoji: true, animated: true },
+];
+
+// Add holiday pack if active
+if (currentHoliday) {
+    SHOP_PACKS.push({
+        id: currentHoliday.id,
+        name: currentHoliday.name,
+        desc: currentHoliday.desc + ' LIMITED TIME!',
+        cost: 350,
+        cards: 5,
+        tags: currentHoliday.tags,
+        gradient: currentHoliday.gradient,
+        icon: currentHoliday.icon,
+        emoji: true,
+        animated: true,
+        limited: true,
+    });
+}
+
+// Pack odds — probability of each rarity
+const PACK_ODDS = {
+    common:    { common: 1.00, uncommon: 0.00, rare: 0.00, epic: 0.00, legendary: 0.00 },
+    uncommon:  { common: 0.00, uncommon: 0.65, rare: 0.25, epic: 0.08, legendary: 0.02 },
+    rare:      { common: 0.00, uncommon: 0.00, rare: 0.55, epic: 0.35, legendary: 0.10 },
+    legendary: { common: 0.00, uncommon: 0.00, rare: 0.30, epic: 0.50, legendary: 0.20 },
+    // Holiday packs have decent odds across the board
+    stpat:     { common: 0.15, uncommon: 0.30, rare: 0.30, epic: 0.18, legendary: 0.07 },
+    vday:      { common: 0.15, uncommon: 0.30, rare: 0.30, epic: 0.18, legendary: 0.07 },
+    nye:       { common: 0.15, uncommon: 0.30, rare: 0.30, epic: 0.18, legendary: 0.07 },
+    easter:    { common: 0.15, uncommon: 0.30, rare: 0.30, epic: 0.18, legendary: 0.07 },
+    july4:     { common: 0.15, uncommon: 0.30, rare: 0.30, epic: 0.18, legendary: 0.07 },
+    halloween: { common: 0.15, uncommon: 0.30, rare: 0.30, epic: 0.18, legendary: 0.07 },
+    thanks:    { common: 0.15, uncommon: 0.30, rare: 0.30, epic: 0.18, legendary: 0.07 },
+    xmas:      { common: 0.15, uncommon: 0.30, rare: 0.30, epic: 0.18, legendary: 0.07 },
+};
+
+// No themed card pools for rarity packs — they pull from all stickmen
+const PACK_POOLS = {};
+
+const PACK_SIZES = {};
+const PACK_COSTS = {};
+SHOP_PACKS.forEach(p => { PACK_SIZES[p.id] = p.cards; PACK_COSTS[p.id] = p.cost; });
+
+// ============================================================
+// STATE
+// ============================================================
+let balance = 1000;
+let collection = []; // array of card objects { num, instanceId }
+let nextInstanceId = 1;
+let pendingCards = [];
+
+function saveState() {
+    localStorage.setItem('sm2_balance', balance);
+    localStorage.setItem('sm2_collection', JSON.stringify(collection));
+    localStorage.setItem('sm2_nextId', nextInstanceId);
+}
+
+function loadState() {
+    const b = localStorage.getItem('sm2_balance');
+    const c = localStorage.getItem('sm2_collection');
+    const n = localStorage.getItem('sm2_nextId');
+    if (b !== null) balance = parseInt(b);
+    if (c !== null) collection = JSON.parse(c);
+    if (n !== null) nextInstanceId = parseInt(n);
+    updateBalanceDisplay();
+}
+
+function updateBalanceDisplay() {
+    document.getElementById('balance').textContent = balance.toLocaleString();
+}
+
+// ============================================================
+// CARD GENERATION
+// ============================================================
+function rollRarity(packType) {
+    const odds = PACK_ODDS[packType];
+    const r = Math.random();
+    let cumulative = 0;
+    for (const [rarity, prob] of Object.entries(odds)) {
+        cumulative += prob;
+        if (r < cumulative) return rarity;
+    }
+    return 'common';
+}
+
+function generateCard(packType) {
+    const rarity = rollRarity(packType);
+    const themePool = PACK_POOLS[packType];
+    let pool;
+    if (themePool) {
+        // Themed pack: prefer stickmen from the theme, but fall back to rarity pool if no match
+        pool = ALL_STICKMEN.filter(s => themePool.includes(s.num) && s.rarity === rarity);
+        if (pool.length === 0) pool = ALL_STICKMEN.filter(s => themePool.includes(s.num));
+        if (pool.length === 0) pool = ALL_STICKMEN.filter(s => s.rarity === rarity);
+    } else {
+        pool = ALL_STICKMEN.filter(s => s.rarity === rarity);
+    }
+    const stickman = pool[Math.floor(Math.random() * pool.length)];
+
+    // Generate stats based on rarity
+    const mult = { common: 1, uncommon: 1.3, rare: 1.6, epic: 2, legendary: 2.5 }[rarity];
+    const base = () => Math.floor(Math.random() * 25 + 45);
+
+    return {
+        ...stickman,
+        instanceId: nextInstanceId++,
+        stats: {
+            POW: Math.min(99, Math.floor(base() * mult)),
+            SPD: Math.min(99, Math.floor(base() * mult)),
+            SKL: Math.min(99, Math.floor(base() * mult)),
+        }
+    };
+}
+
+// ============================================================
+// SVG STICKMAN RENDERER
+// ============================================================
+function renderStickmanSVG(card) {
+    const c = card.color;
+    let head = `<circle cx="50" cy="24" r="12" fill="none" stroke="${c}" stroke-width="3"/>`;
+    let eyes = `<circle cx="46" cy="22" r="1.5" fill="${c}"/><circle cx="54" cy="22" r="1.5" fill="${c}"/>`;
+    let mouth = `<path d="M46,28 Q50,31 54,28" fill="none" stroke="${c}" stroke-width="1.5"/>`;
+    let body = `<line x1="50" y1="36" x2="50" y2="70" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`;
+    let leftArm = `<line x1="50" y1="46" x2="28" y2="55" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`;
+    let rightArm = `<line x1="50" y1="46" x2="72" y2="42" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`;
+    let leftLeg = `<line x1="50" y1="70" x2="35" y2="98" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`;
+    let rightLeg = `<line x1="50" y1="70" x2="65" y2="98" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`;
+    let extras = '';
+
+    // HATS
+    const hat = card.hat;
+    if (hat === 'smurf') {
+        extras += `<path d="M42,14 Q44,0 60,-2 Q52,6 50,14" fill="${c}" stroke="${c}" stroke-width="1"/>`;
+    } else if (hat === 'wizard') {
+        extras += `<polygon points="50,0 38,14 62,14" fill="${c}" stroke="#ffd700" stroke-width="1"/>
+                   <line x1="38" y1="14" x2="62" y2="14" stroke="#ffd700" stroke-width="1.5"/>`;
+    } else if (hat === 'crown' || hat === 'goat_crown') {
+        extras += `<polygon points="38,14 40,4 44,10 48,2 52,10 56,4 58,14" fill="#ffd700" stroke="#ffd700" stroke-width="1"/>`;
+        if (hat === 'goat_crown') extras += `<circle cx="48" cy="6" r="2" fill="#e94560"/><circle cx="52" cy="3" r="2" fill="#e94560"/>`;
+    } else if (hat === 'pirate') {
+        extras += `<ellipse cx="50" cy="14" rx="16" ry="4" fill="#2d3436"/>
+                   <path d="M38,14 Q50,0 62,14" fill="#2d3436"/>
+                   <text x="50" y="12" text-anchor="middle" fill="#fff" font-size="6">&#x2620;</text>`;
+    } else if (hat === 'ninja') {
+        extras += `<rect x="36" y="18" width="28" height="7" rx="2" fill="${c}"/>`;
+        eyes = `<line x1="44" y1="22" x2="48" y2="22" stroke="#fff" stroke-width="2"/>
+                <line x1="52" y1="22" x2="56" y2="22" stroke="#fff" stroke-width="2"/>`;
+        mouth = '';
+    } else if (hat === 'chef' || hat === 'chef_tall') {
+        const h = hat === 'chef_tall' ? -8 : -2;
+        extras += `<rect x="40" y="10" width="20" height="6" rx="1" fill="#fff"/>
+                   <ellipse cx="50" cy="10" rx="12" ry="${hat === 'chef_tall' ? 10 : 6}" fill="#fff"/>`;
+    } else if (hat === 'headband') {
+        extras += `<rect x="36" y="16" width="28" height="4" rx="2" fill="#e94560"/>`;
+    } else if (hat === 'headphones') {
+        extras += `<path d="M36,20 Q36,8 50,8 Q64,8 64,20" fill="none" stroke="#333" stroke-width="3"/>
+                   <rect x="33" y="18" width="6" height="8" rx="3" fill="#333"/>
+                   <rect x="61" y="18" width="6" height="8" rx="3" fill="#333"/>`;
+    } else if (hat === 'backwards') {
+        extras += `<path d="M38,16 Q50,10 62,16" fill="#e94560"/>
+                   <rect x="54" y="14" width="10" height="3" rx="1" fill="#e94560"/>`;
+    } else if (hat === 'glasses') {
+        extras += `<circle cx="44" cy="22" r="5" fill="none" stroke="#333" stroke-width="1.5"/>
+                   <circle cx="56" cy="22" r="5" fill="none" stroke="#333" stroke-width="1.5"/>
+                   <line x1="49" y1="22" x2="51" y2="22" stroke="#333" stroke-width="1.5"/>`;
+        eyes = '';
+    } else if (hat === 'straw') {
+        extras += `<ellipse cx="50" cy="14" rx="18" ry="3" fill="#c4a35a"/>
+                   <path d="M38,14 Q50,4 62,14" fill="#c4a35a"/>`;
+    } else if (hat === 'nightcap') {
+        extras += `<path d="M40,16 Q42,0 60,4" fill="#6c5ce7" stroke="#ffd700" stroke-width="1"/>
+                   <circle cx="60" cy="4" r="3" fill="#ffd700"/>`;
+    } else if (hat === 'sunglasses') {
+        extras += `<rect x="40" y="19" width="10" height="7" rx="2" fill="#2d3436"/>
+                   <rect x="52" y="19" width="10" height="7" rx="2" fill="#2d3436"/>
+                   <line x1="50" y1="22" x2="52" y2="22" stroke="#2d3436" stroke-width="1.5"/>`;
+        eyes = '';
+    } else if (hat === 'beanie') {
+        extras += `<path d="M38,18 Q50,6 62,18" fill="#e94560"/>
+                   <line x1="38" y1="18" x2="62" y2="18" stroke="#fff" stroke-width="2"/>
+                   <circle cx="50" cy="8" r="3" fill="#e94560"/>`;
+    } else if (hat === 'afro') {
+        extras += `<circle cx="50" cy="18" r="18" fill="${c}" opacity="0.6"/>`;
+    } else if (hat === 'hardhat') {
+        extras += `<ellipse cx="50" cy="16" rx="16" ry="3" fill="#ffd700"/>
+                   <path d="M38,16 Q50,6 62,16" fill="#ffd700"/>`;
+    } else if (hat === 'beret') {
+        extras += `<ellipse cx="48" cy="14" rx="14" ry="5" fill="#e94560"/>`;
+    } else if (hat === 'cowboy') {
+        extras += `<ellipse cx="50" cy="14" rx="20" ry="3" fill="#c4a35a"/>
+                   <path d="M40,14 Q50,2 60,14" fill="#c4a35a"/>`;
+    } else if (hat === 'mailhat') {
+        extras += `<path d="M38,16 Q50,8 62,16" fill="#636e72"/>
+                   <rect x="44" y="12" width="12" height="2" fill="#58a6ff"/>`;
+    } else if (hat === 'bucket') {
+        extras += `<path d="M36,18 L40,8 60,8 64,18" fill="#74b9ff"/>`;
+    } else if (hat === 'firehelmet') {
+        extras += `<path d="M36,18 Q50,4 64,18" fill="#e94560"/>
+                   <rect x="36" y="16" width="28" height="4" rx="1" fill="#e94560"/>
+                   <rect x="34" y="18" width="8" height="3" fill="#e94560"/>`;
+    } else if (hat === 'detective') {
+        extras += `<path d="M36,16 Q50,6 64,16" fill="#b2bec3"/>
+                   <rect x="36" y="14" width="28" height="4" rx="1" fill="#636e72"/>`;
+    } else if (hat === 'scuba') {
+        head = `<circle cx="50" cy="24" r="14" fill="none" stroke="#58a6ff" stroke-width="3"/>`;
+        extras += `<circle cx="50" cy="24" r="14" fill="#00cec944"/>
+                   <rect x="62" y="20" width="10" height="4" rx="2" fill="#636e72"/>`;
+    } else if (hat === 'viking') {
+        extras += `<path d="M36,18 Q50,8 64,18" fill="#b2bec3"/>
+                   <line x1="36" y1="18" x2="30" y2="6" stroke="#ffd700" stroke-width="3" stroke-linecap="round"/>
+                   <line x1="64" y1="18" x2="70" y2="6" stroke="#ffd700" stroke-width="3" stroke-linecap="round"/>`;
+    } else if (hat === 'mohawk') {
+        extras += `<path d="M48,14 L48,0 L52,0 L52,14" fill="${c}"/>
+                   <path d="M46,14 L46,4 L48,4" fill="${c}"/>`;
+    } else if (hat === 'clown') {
+        extras += `<circle cx="50" cy="8" r="8" fill="#e94560"/>
+                   <circle cx="50" cy="8" r="5" fill="#ffd700"/>`;
+    } else if (hat === 'safari') {
+        extras += `<ellipse cx="50" cy="14" rx="16" ry="3" fill="#c4a35a"/>
+                   <path d="M40,14 Q50,6 60,14" fill="#c4a35a"/>`;
+    } else if (hat === 'karate') {
+        extras += `<rect x="36" y="16" width="28" height="4" rx="1" fill="#fff" stroke="#333" stroke-width="0.5"/>`;
+    } else if (hat === 'astronaut') {
+        head = `<circle cx="50" cy="24" r="15" fill="none" stroke="#dfe6e9" stroke-width="3"/>`;
+        extras += `<circle cx="50" cy="24" r="15" fill="#74b9ff22"/>
+                   <rect x="62" y="18" width="6" height="6" rx="1" fill="#636e72"/>
+                   <rect x="62" y="26" width="6" height="6" rx="1" fill="#636e72"/>`;
+    } else if (hat === 'antenna') {
+        extras += `<line x1="50" y1="12" x2="50" y2="2" stroke="#636e72" stroke-width="2"/>
+                   <circle cx="50" cy="2" r="3" fill="#e94560"/>`;
+        head = `<rect x="38" y="14" width="24" height="20" rx="4" fill="none" stroke="${c}" stroke-width="3"/>`;
+        eyes = `<rect x="42" y="20" width="5" height="3" fill="#58a6ff"/>
+                <rect x="53" y="20" width="5" height="3" fill="#58a6ff"/>`;
+    } else if (hat === 'mask') {
+        extras += `<rect x="38" y="18" width="24" height="8" rx="4" fill="#e94560"/>
+                   <circle cx="45" cy="22" r="3" fill="#fff"/>
+                   <circle cx="55" cy="22" r="3" fill="#fff"/>`;
+        eyes = '';
+    } else if (hat === 'football') {
+        extras += `<path d="M36,18 Q50,4 64,18" fill="${c}"/>
+                   <rect x="36" y="16" width="28" height="4" rx="1" fill="${c}"/>
+                   <line x1="40" y1="16" x2="40" y2="12" stroke="#fff" stroke-width="1"/>`;
+    } else if (hat === 'knight') {
+        extras += `<path d="M38,18 Q50,2 62,18" fill="#b2bec3"/>
+                   <rect x="38" y="16" width="24" height="6" rx="1" fill="#b2bec3"/>
+                   <rect x="44" y="20" width="12" height="6" rx="1" fill="none" stroke="#b2bec3" stroke-width="2"/>`;
+    } else if (hat === 'mech') {
+        head = `<rect x="36" y="12" width="28" height="24" rx="3" fill="none" stroke="${c}" stroke-width="3"/>`;
+        extras += `<rect x="34" y="8" width="32" height="6" rx="2" fill="#636e72"/>`;
+        eyes = `<rect x="40" y="20" width="7" height="4" fill="#58a6ff"/>
+                <rect x="53" y="20" width="7" height="4" fill="#e94560"/>`;
+    } else if (hat === 'cosmic') {
+        extras += `<ellipse cx="50" cy="14" rx="14" ry="8" fill="#6c5ce7" opacity="0.5"/>
+                   <circle cx="44" cy="10" r="2" fill="#ffd700"/>
+                   <circle cx="56" cy="8" r="1.5" fill="#ffd700"/>
+                   <circle cx="50" cy="6" r="1" fill="#fff"/>`;
+    } else if (hat === 'flamehelmet') {
+        extras += `<path d="M36,20 Q38,4 50,-2 Q62,4 64,20" fill="#ff3838"/>
+                   <path d="M40,20 Q42,8 50,2 Q58,8 60,20" fill="#ff6b35"/>
+                   <path d="M44,20 Q46,12 50,8 Q54,12 56,20" fill="#ffd700"/>`;
+    }
+
+    // EYEPATCH
+    if (card.special === 'eyepatch' || (card.hat === 'pirate')) {
+        eyes = `<circle cx="54" cy="22" r="1.5" fill="${c}"/>`;
+        extras += `<circle cx="45" cy="22" r="4" fill="#2d3436"/>
+                   <line x1="45" y1="18" x2="58" y2="14" stroke="#2d3436" stroke-width="1"/>`;
+    }
+
+    // ITEMS
+    const item = card.item;
+    if (item === 'basketball') {
+        extras += `<circle cx="75" cy="40" r="7" fill="none" stroke="#ff6b35" stroke-width="2"/>
+                   <path d="M68,40 Q75,33 82,40" fill="none" stroke="#ff6b35" stroke-width="1"/>`;
+    } else if (item === 'controller') {
+        extras += `<rect x="68" y="38" width="14" height="8" rx="3" fill="#636e72"/>
+                   <circle cx="72" cy="42" r="1.5" fill="#e94560"/>
+                   <circle cx="78" cy="42" r="1.5" fill="#58a6ff"/>`;
+    } else if (item === 'burger') {
+        extras += `<ellipse cx="75" cy="38" rx="8" ry="4" fill="#c4a35a"/>
+                   <rect x="67" y="36" width="16" height="3" fill="#00b894"/>
+                   <rect x="67" y="38" width="16" height="2" fill="#e94560"/>
+                   <ellipse cx="75" cy="41" rx="8" ry="3" fill="#c4a35a"/>`;
+    } else if (item === 'skateboard') {
+        extras += `<rect x="26" y="98" width="24" height="4" rx="2" fill="#e94560"/>
+                   <circle cx="32" cy="104" r="2.5" fill="#636e72"/>
+                   <circle cx="44" cy="104" r="2.5" fill="#636e72"/>`;
+    } else if (item === 'book') {
+        extras += `<rect x="22" y="50" width="10" height="13" rx="1" fill="#e94560"/>
+                   <line x1="27" y1="50" x2="27" y2="63" stroke="#b2bec3" stroke-width="1"/>`;
+    } else if (item === 'umbrella') {
+        extras += `<path d="M20,35 Q30,15 40,35" fill="#58a6ff"/>
+                   <line x1="30" y1="35" x2="30" y2="55" stroke="#636e72" stroke-width="2"/>
+                   <path d="M30,55 Q33,58 30,60" fill="none" stroke="#636e72" stroke-width="2"/>`;
+    } else if (item === 'guitar') {
+        extras += `<ellipse cx="24" cy="55" rx="6" ry="8" fill="none" stroke="#c4a35a" stroke-width="2"/>
+                   <line x1="24" y1="47" x2="24" y2="32" stroke="#c4a35a" stroke-width="2"/>
+                   <rect x="22" y="30" width="4" height="4" rx="1" fill="#c4a35a"/>`;
+    } else if (item === 'pitchfork') {
+        extras += `<line x1="75" y1="30" x2="75" y2="60" stroke="#c4a35a" stroke-width="2"/>
+                   <line x1="70" y1="30" x2="70" y2="38" stroke="#c4a35a" stroke-width="2"/>
+                   <line x1="80" y1="30" x2="80" y2="38" stroke="#c4a35a" stroke-width="2"/>
+                   <line x1="70" y1="30" x2="80" y2="30" stroke="#c4a35a" stroke-width="2"/>`;
+    } else if (item === 'soccerball') {
+        extras += `<circle cx="62" cy="92" r="7" fill="#fff" stroke="#333" stroke-width="1.5"/>
+                   <polygon points="62,85 66,88 64,93 60,93 58,88" fill="#333"/>`;
+    } else if (item === 'surfboard') {
+        extras += `<ellipse cx="80" cy="60" rx="5" ry="25" fill="#58a6ff" transform="rotate(15,80,60)"/>
+                   <line x1="80" y1="40" x2="80" y2="80" stroke="#fff" stroke-width="1" transform="rotate(15,80,60)"/>`;
+    } else if (item === 'snowball') {
+        extras += `<circle cx="26" cy="52" r="6" fill="#fff" opacity="0.8"/>`;
+    } else if (item === 'hammer') {
+        extras += `<line x1="75" y1="35" x2="75" y2="55" stroke="#c4a35a" stroke-width="2"/>
+                   <rect x="70" y="30" width="10" height="7" rx="1" fill="#636e72"/>`;
+    } else if (item === 'paintbrush') {
+        extras += `<line x1="75" y1="35" x2="75" y2="55" stroke="#c4a35a" stroke-width="2"/>
+                   <path d="M72,32 L78,32 L76,38 L74,38 Z" fill="#e94560"/>`;
+    } else if (item === 'lasso') {
+        extras += `<circle cx="78" cy="35" r="10" fill="none" stroke="#c4a35a" stroke-width="2"/>`;
+    } else if (item === 'letter') {
+        extras += `<rect x="22" y="50" width="12" height="8" rx="1" fill="#fff" stroke="#58a6ff" stroke-width="1"/>
+                   <path d="M22,50 L28,55 L34,50" fill="none" stroke="#58a6ff" stroke-width="1"/>`;
+    } else if (item === 'fishingrod') {
+        extras += `<line x1="75" y1="30" x2="85" y2="20" stroke="#c4a35a" stroke-width="2"/>
+                   <line x1="85" y1="20" x2="85" y2="50" stroke="#8892b0" stroke-width="1" stroke-dasharray="2"/>`;
+    } else if (item === 'sword') {
+        extras += `<line x1="74" y1="32" x2="88" y2="18" stroke="#b2bec3" stroke-width="3"/>
+                   <line x1="72" y1="36" x2="78" y2="30" stroke="#c4a35a" stroke-width="2"/>`;
+    } else if (item === 'frypan') {
+        extras += `<circle cx="24" cy="52" r="8" fill="#636e72"/>
+                   <line x1="24" y1="60" x2="24" y2="72" stroke="#636e72" stroke-width="2"/>`;
+    } else if (item === 'hose') {
+        extras += `<path d="M72,42 Q85,35 82,50 Q80,60 90,55" fill="none" stroke="#58a6ff" stroke-width="3"/>`;
+    } else if (item === 'staff') {
+        extras += `<line x1="75" y1="25" x2="75" y2="65" stroke="#c4a35a" stroke-width="3"/>
+                   <circle cx="75" cy="22" r="5" fill="#ffd700" opacity="0.7"/>`;
+    } else if (item === 'magnifier') {
+        extras += `<circle cx="24" cy="50" r="7" fill="none" stroke="#ffd700" stroke-width="2"/>
+                   <line x1="29" y1="55" x2="34" y2="62" stroke="#ffd700" stroke-width="2"/>`;
+    } else if (item === 'trident') {
+        extras += `<line x1="75" y1="28" x2="75" y2="60" stroke="#ffd700" stroke-width="2"/>
+                   <line x1="70" y1="32" x2="70" y2="28" stroke="#ffd700" stroke-width="2"/>
+                   <line x1="80" y1="32" x2="80" y2="28" stroke="#ffd700" stroke-width="2"/>
+                   <line x1="70" y1="32" x2="80" y2="32" stroke="#ffd700" stroke-width="2"/>`;
+    } else if (item === 'axe') {
+        extras += `<line x1="76" y1="30" x2="76" y2="58" stroke="#c4a35a" stroke-width="2"/>
+                   <path d="M76,30 Q88,34 76,42" fill="#b2bec3"/>`;
+    } else if (item === 'balloon') {
+        extras += `<ellipse cx="24" cy="30" rx="7" ry="9" fill="#e94560"/>
+                   <line x1="24" y1="39" x2="26" y2="52" stroke="#8892b0" stroke-width="1"/>`;
+    } else if (item === 'map') {
+        extras += `<rect x="22" y="48" width="12" height="10" fill="#ffeaa7" stroke="#c4a35a" stroke-width="1"/>
+                   <line x1="25" y1="50" x2="31" y2="56" stroke="#e94560" stroke-width="1"/>`;
+    } else if (item === 'turntable') {
+        extras += `<rect x="20" y="56" width="18" height="3" rx="1" fill="#636e72"/>
+                   <circle cx="29" cy="54" r="6" fill="#2d3436" stroke="#636e72" stroke-width="1"/>
+                   <circle cx="29" cy="54" r="1.5" fill="#e94560"/>`;
+    } else if (item === 'flag') {
+        extras += `<line x1="76" y1="28" x2="76" y2="60" stroke="#b2bec3" stroke-width="2"/>
+                   <rect x="76" y="28" width="12" height="8" fill="#e94560"/>`;
+    } else if (item === 'shield') {
+        extras += `<path d="M20,42 L20,56 Q28,64 28,56 L28,42 Z" fill="#ffd700" stroke="#c4a35a" stroke-width="1"/>
+                   <path d="M22,44 L26,44 L26,52 Q24,56 22,52 Z" fill="#e94560"/>`;
+    } else if (item === 'scepter') {
+        extras += `<line x1="76" y1="30" x2="76" y2="60" stroke="#ffd700" stroke-width="3"/>
+                   <circle cx="76" cy="27" r="5" fill="#ffd700"/>
+                   <circle cx="76" cy="27" r="3" fill="#e94560"/>`;
+    } else if (item === 'pillow') {
+        extras += `<rect x="20" y="48" width="14" height="10" rx="4" fill="#a29bfe" opacity="0.6"/>`;
+    } else if (item === 'dual_swords') {
+        extras += `<line x1="22" y1="60" x2="15" y2="40" stroke="#b2bec3" stroke-width="2.5"/>
+                   <line x1="78" y1="36" x2="88" y2="18" stroke="#b2bec3" stroke-width="2.5"/>`;
+    } else if (item === 'greatsword') {
+        extras += `<line x1="74" y1="34" x2="92" y2="10" stroke="#ffd700" stroke-width="3"/>
+                   <line x1="70" y1="38" x2="80" y2="30" stroke="#c4a35a" stroke-width="3"/>`;
+    } else if (item === 'lightning') {
+        extras += `<polygon points="74,30 82,30 78,42 86,42 72,60 76,46 68,46" fill="#ffd700"/>`;
+    } else if (item === 'cannon') {
+        extras += `<rect x="68" y="38" width="18" height="10" rx="3" fill="#636e72"/>
+                   <circle cx="86" cy="43" r="3" fill="#2d3436"/>`;
+    } else if (item === 'trophy') {
+        extras += `<path d="M68,36 L68,44 Q74,52 80,44 L80,36 Z" fill="#ffd700"/>
+                   <line x1="74" y1="52" x2="74" y2="58" stroke="#ffd700" stroke-width="2"/>
+                   <rect x="70" y="58" width="8" height="3" rx="1" fill="#ffd700"/>`;
+    } else if (item === 'orb') {
+        extras += `<circle cx="76" cy="40" r="8" fill="#6c5ce7" opacity="0.5"/>
+                   <circle cx="76" cy="40" r="5" fill="#a29bfe" opacity="0.5"/>
+                   <circle cx="76" cy="40" r="2" fill="#fff" opacity="0.6"/>`;
+    } else if (item === 'firesword') {
+        extras += `<line x1="74" y1="34" x2="90" y2="14" stroke="#ff6b35" stroke-width="3"/>
+                   <path d="M88,16 Q94,8 90,2 Q86,10 84,14" fill="#ffd700" opacity="0.7"/>`;
+    } else if (item === 'football') {
+        extras += `<ellipse cx="78" cy="38" rx="8" ry="5" fill="none" stroke="#c4a35a" stroke-width="2" transform="rotate(-20,78,38)"/>
+                   <line x1="74" y1="38" x2="82" y2="38" stroke="#fff" stroke-width="1" transform="rotate(-20,78,38)"/>`;
+    }
+
+    // SPECIAL EFFECTS
+    const special = card.special;
+    if (special === 'sparkles') {
+        extras += `<text x="15" y="35" fill="#ffd700" font-size="8">&#x2728;</text>
+                   <text x="80" y="65" fill="#ffd700" font-size="6">&#x2728;</text>
+                   <text x="20" y="80" fill="#ffd700" font-size="5">&#x2728;</text>`;
+    } else if (special === 'flames') {
+        extras += `<path d="M10,90 Q15,78 12,70 Q18,80 20,90" fill="#ff6b35" opacity="0.5"/>
+                   <path d="M80,85 Q85,75 82,68 Q88,76 90,85" fill="#ff6b35" opacity="0.5"/>`;
+    } else if (special === 'stars') {
+        extras += `<circle cx="12" cy="40" r="1.5" fill="#ffd700"/><circle cx="88" cy="30" r="1" fill="#ffd700"/>
+                   <circle cx="85" cy="70" r="1.5" fill="#ffd700"/><circle cx="15" cy="80" r="1" fill="#ffd700"/>
+                   <circle cx="10" cy="60" r="0.8" fill="#fff"/>`;
+    } else if (special === 'lightning') {
+        extras += `<polygon points="15,20 20,20 18,30 24,30 12,45 16,32 10,32" fill="#ffd700" opacity="0.6"/>
+                   <polygon points="82,60 86,60 84,68 88,68 78,80 81,70 76,70" fill="#ffd700" opacity="0.6"/>`;
+    } else if (special === 'shadow') {
+        extras += `<ellipse cx="50" cy="100" rx="20" ry="5" fill="#000" opacity="0.3"/>`;
+    } else if (special === 'rainbow') {
+        extras += `<path d="M10,70 Q50,20 90,70" fill="none" stroke="#e94560" stroke-width="2" opacity="0.3"/>
+                   <path d="M12,72 Q50,24 88,72" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.3"/>
+                   <path d="M14,74 Q50,28 86,74" fill="none" stroke="#ffd700" stroke-width="2" opacity="0.3"/>
+                   <path d="M16,76 Q50,32 84,76" fill="none" stroke="#3fb950" stroke-width="2" opacity="0.3"/>`;
+    } else if (special === 'bolts') {
+        extras += `<text x="14" y="45" fill="#ffd700" font-size="8">&#x26A1;</text>
+                   <text x="80" y="70" fill="#ffd700" font-size="6">&#x26A1;</text>`;
+    } else if (special === 'bubbles') {
+        extras += `<circle cx="15" cy="60" r="3" fill="none" stroke="#74b9ff" stroke-width="1" opacity="0.5"/>
+                   <circle cx="85" cy="50" r="2" fill="none" stroke="#74b9ff" stroke-width="1" opacity="0.5"/>
+                   <circle cx="12" cy="45" r="1.5" fill="none" stroke="#74b9ff" stroke-width="1" opacity="0.5"/>`;
+    } else if (special === 'torn') {
+        body = `<line x1="50" y1="36" x2="50" y2="70" stroke="${c}" stroke-width="3" stroke-linecap="round" stroke-dasharray="4,2"/>`;
+    } else if (special === 'rednose') {
+        extras += `<circle cx="50" cy="26" r="3" fill="#e94560"/>`;
+    } else if (special === 'sweat') {
+        extras += `<path d="M64,18 Q66,22 64,26" fill="#74b9ff" opacity="0.6"/>
+                   <path d="M67,22 Q69,26 67,30" fill="#74b9ff" opacity="0.4"/>`;
+    } else if (special === 'kick') {
+        rightLeg = `<line x1="50" y1="70" x2="78" y2="72" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`;
+    } else if (special === 'cape') {
+        extras += `<path d="M42,36 Q30,60 35,90 L50,70 L65,90 Q70,60 58,36" fill="#e94560" opacity="0.5"/>`;
+    } else if (special === 'snowflakes') {
+        extras += `<text x="12" y="40" fill="#74b9ff" font-size="8">&#x2744;</text>
+                   <text x="82" y="65" fill="#74b9ff" font-size="6">&#x2744;</text>
+                   <text x="18" y="78" fill="#74b9ff" font-size="5">&#x2744;</text>`;
+    }
+
+    return `<svg viewBox="0 0 100 108" xmlns="http://www.w3.org/2000/svg">
+        ${extras}
+        ${head}
+        ${eyes}
+        ${mouth}
+        ${body}
+        ${leftArm}
+        ${rightArm}
+        ${leftLeg}
+        ${rightLeg}
+    </svg>`;
+}
+
+// ============================================================
+// CARD HTML
+// ============================================================
+function cardHTML(card) {
+    const glowClass = card.rarity === 'legendary' ? ' legendary-glow' : card.rarity === 'epic' ? ' epic-glow' : card.rarity === 'rare' ? ' rare-glow' : '';
+    const statEntries = Object.entries(card.stats);
+    const numStr = String(card.num).padStart(2, '0');
+
+    return `<div class="card${glowClass}">
+        <div class="card-bg ${card.rarity}"></div>
+        <div class="card-inner">
+            <div class="card-top-row">
+                <div class="card-number-big">#${numStr}</div>
+                <div class="card-rarity" style="color:${RARITY_COLORS[card.rarity]}">${card.rarity}</div>
+            </div>
+            <div class="card-stickman">${getCardImage(card.num) ? `<img src="${getCardImage(card.num)}" style="width:100%;height:100%;object-fit:contain;border-radius:4px;"/>` : renderStickmanSVG(card)}</div>
+            <div class="card-info">
+                <div class="card-name">${card.name}</div>
+                <div class="card-category">${card.category}</div>
+                <div class="card-stats">
+                    ${statEntries.map(([k, v]) => `<div class="card-stat"><div class="stat-val">${v}</div><div class="stat-label">${k}</div></div>`).join('')}
+                </div>
+            </div>
+            <div class="card-series">STICKMEN S1</div>
+        </div>
+    </div>`;
+}
+
+// ============================================================
+// PACK OPENING
+// ============================================================
+function buyPack(packType) {
+    const cost = PACK_COSTS[packType];
+    if (balance < cost) { showToast("Not enough coins!"); return; }
+
+    balance -= cost;
+    updateBalanceDisplay();
+
+    pendingCards = [];
+    for (let i = 0; i < PACK_SIZES[packType]; i++) {
+        pendingCards.push(generateCard(packType));
+    }
+
+    const overlay = document.getElementById('pack-overlay');
+    const pack = document.getElementById('opening-pack');
+    const instruction = document.getElementById('open-instruction');
+    const revealedDiv = document.getElementById('revealed-cards');
+    const closeBtn = document.getElementById('close-reveal');
+
+    overlay.classList.add('active');
+    pack.style.display = 'block';
+    pack.style.opacity = '1';
+    pack.style.transform = 'scale(1)';
+    instruction.style.display = 'block';
+    revealedDiv.classList.remove('active');
+    revealedDiv.innerHTML = '';
+    closeBtn.classList.remove('active');
+
+    const gradients = {
+        starter: 'linear-gradient(135deg, #3fb950, #58a6ff)',
+        mega: 'linear-gradient(135deg, #ff6b35, #e94560)',
+        ultra: 'linear-gradient(135deg, #ffd700, #ff6b35, #e94560, #533483)',
+    };
+    pack.style.background = gradients[packType];
+    pack.style.borderRadius = '16px';
+    pack.className = 'opening-pack';
+    setTimeout(() => pack.classList.add('shake'), 100);
+}
+
+function ripPack() {
+    const pack = document.getElementById('opening-pack');
+    if (pack.classList.contains('rip')) return;
+    pack.classList.remove('shake');
+    pack.classList.add('rip');
+    document.getElementById('open-instruction').style.display = 'none';
+    setTimeout(() => { pack.style.display = 'none'; revealCards(); }, 800);
+}
+
+function revealCards() {
+    const revealedDiv = document.getElementById('revealed-cards');
+    const closeBtn = document.getElementById('close-reveal');
+    revealedDiv.classList.add('active');
+
+    pendingCards.forEach((card, i) => {
+        setTimeout(() => {
+            const wrap = document.createElement('div');
+            wrap.className = 'revealed-card-wrap';
+            wrap.style.animationDelay = `${i * 0.15}s`;
+            wrap.innerHTML = cardHTML(card);
+            revealedDiv.appendChild(wrap);
+            if (i === pendingCards.length - 1) closeBtn.classList.add('active');
+        }, i * 250);
+    });
+}
+
+function closeReveal() {
+    const cardsToCollect = [...pendingCards];
+    collection.push(...pendingCards);
+    pendingCards = [];
+    saveState();
+    document.getElementById('pack-overlay').classList.remove('active');
+
+    // If user is signed in and has an address, show shipping + send email
+    if (currentUser && getAddressString()) {
+        showShippingOverlay(cardsToCollect);
+    } else if (currentUser && !getAddressString()) {
+        showToast('Cards collected! Add a shipping address in Account to get them shipped!');
+    } else {
+        showToast('Cards collected! Sign in & add an address to get them shipped!');
+    }
+}
+
+function showShippingOverlay(cards) {
+    const overlay = document.getElementById('shipping-overlay');
+    const cardsList = document.getElementById('shipping-cards-list');
+    const addrPreview = document.getElementById('shipping-address-preview');
+
+    // Show cards that were pulled
+    cardsList.innerHTML = cards.map(c =>
+        `<span class="shipping-card-tag" style="background:${RARITY_COLORS[c.rarity]}22; color:${RARITY_COLORS[c.rarity]}; border:1px solid ${RARITY_COLORS[c.rarity]}44;">
+            #${String(c.num).padStart(2,'0')} ${c.name}
+        </span>`
+    ).join('');
+
+    addrPreview.textContent = getAddressString();
+    overlay.classList.add('active');
+
+    // Save order
+    const orderId = saveOrder(cards);
+
+    // Send email notification to owner
+    sendOrderEmail(orderId, cards, currentUser);
+}
+
+function closeShipping() {
+    document.getElementById('shipping-overlay').classList.remove('active');
+    const newUniqueCount = new Set(collection.map(c => c.num)).size;
+    showToast(`${newUniqueCount}/50 unique stickmen collected!`);
+}
+
+// ============================================================
+// SHOP RENDERING & SEARCH
+// ============================================================
+function renderPackCard(pack) {
+    const animStyle = pack.animated ? ' background-size:300% 300%; animation: legendaryShine 3s ease infinite;' : '';
+    let iconContent;
+    if (pack.emoji) {
+        iconContent = `<div style="font-size:3.5rem; line-height:1;">${pack.icon}</div>`;
+    } else {
+        iconContent = `<svg viewBox="0 0 100 120" width="80" height="100">
+            <circle cx="50" cy="20" r="13" fill="none" stroke="#fff" stroke-width="3"/>
+            <line x1="50" y1="33" x2="50" y2="72" stroke="#fff" stroke-width="3"/>
+            <line x1="50" y1="45" x2="30" y2="55" stroke="#fff" stroke-width="3"/>
+            <line x1="50" y1="45" x2="70" y2="55" stroke="#fff" stroke-width="3"/>
+            <line x1="50" y1="72" x2="33" y2="100" stroke="#fff" stroke-width="3"/>
+            <line x1="50" y1="72" x2="67" y2="100" stroke="#fff" stroke-width="3"/>
+            <text x="50" y="115" text-anchor="middle" fill="${pack.iconColor || '#fff'}" font-size="9" font-family="Bangers">${pack.icon}</text>
+        </svg>`;
+    }
+
+    const limitedBadge = pack.limited ? '<div style="position:absolute;top:10px;right:-28px;background:#e94560;color:#fff;font-size:0.6rem;font-weight:900;padding:0.15rem 2rem;transform:rotate(35deg);letter-spacing:1px;">LIMITED</div>' : '';
+
+    return `<div class="pack" onclick="buyPack('${pack.id}')" style="position:relative;overflow:hidden;">
+        ${limitedBadge}
+        <div class="pack-art" style="${pack.gradient};${animStyle}">
+            ${iconContent}
+        </div>
+        <div class="pack-name">${pack.name}</div>
+        <div class="pack-desc">${pack.desc}</div>
+        <div class="pack-price"><span>&#x1FA99;</span> ${pack.cost}</div>
+        <div class="pack-cards">${pack.cards} cards</div>
+    </div>`;
+}
+
+function renderShop(packs) {
+    const grid = document.getElementById('shop-grid');
+    const results = document.getElementById('shop-results');
+
+    if (packs.length === 0) {
+        grid.innerHTML = `<div class="no-results" style="grid-column:1/-1;">
+            <div class="big-icon">&#x1F50D;</div>
+            <p>No packs found. Try a different search!</p>
+        </div>`;
+        results.textContent = '';
+        return;
+    }
+
+    results.textContent = packs.length === SHOP_PACKS.length ? `${packs.length} packs available` : `${packs.length} pack${packs.length > 1 ? 's' : ''} found`;
+    grid.innerHTML = packs.map(p => renderPackCard(p)).join('');
+}
+
+function filterPacks() {
+    const query = document.getElementById('pack-search').value.toLowerCase().trim();
+    document.getElementById('search-clear').classList.toggle('visible', query.length > 0);
+
+    // Clear active tag
+    document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+    if (!query) document.querySelector('.tag').classList.add('active');
+
+    if (!query) {
+        renderShop(SHOP_PACKS);
+        return;
+    }
+
+    const terms = query.split(/\s+/);
+    const filtered = SHOP_PACKS.filter(pack => {
+        const searchable = [pack.name, pack.desc, ...pack.tags].join(' ').toLowerCase();
+        return terms.every(term => searchable.includes(term));
+    });
+
+    renderShop(filtered);
+}
+
+function clearSearch() {
+    document.getElementById('pack-search').value = '';
+    document.getElementById('search-clear').classList.remove('visible');
+    document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+    document.querySelector('.tag').classList.add('active');
+    renderShop(SHOP_PACKS);
+}
+
+function searchTag(tag) {
+    const input = document.getElementById('pack-search');
+    document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+
+    if (tag === 'all') {
+        input.value = '';
+        document.getElementById('search-clear').classList.remove('visible');
+        renderShop(SHOP_PACKS);
+        return;
+    }
+
+    input.value = tag;
+    document.getElementById('search-clear').classList.add('visible');
+    filterPacks();
+}
+
+// Render shop on load
+renderShop(SHOP_PACKS);
+
+// ============================================================
+// COLLECTION
+// ============================================================
+let currentFilter = 'all';
+
+function filterCards(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCollection();
+}
+
+function renderCollection() {
+    const grid = document.getElementById('collection-grid');
+    const countEl = document.getElementById('collection-count');
+
+    let filtered = [...collection];
+    if (currentFilter !== 'all') {
+        filtered = filtered.filter(c => c.rarity === currentFilter);
+    }
+
+    const rarityOrder = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4 };
+    filtered.sort((a, b) => a.num - b.num || rarityOrder[a.rarity] - rarityOrder[b.rarity]);
+
+    const uniqueCount = new Set(collection.map(c => c.num)).size;
+    countEl.textContent = `${collection.length} cards (${uniqueCount}/50 unique) — showing ${filtered.length}`;
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div class="empty-collection">
+            <div class="big-icon">${collection.length === 0 ? '&#x1F4E6;' : '&#x1F50D;'}</div>
+            <p>${collection.length === 0 ? 'No cards yet! Head to the shop and rip some packs!' : 'No cards match this filter.'}</p>
+        </div>`;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(c => cardHTML(c)).join('');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// COIN SHOP — BTC PURCHASES
+// ============================================================
+
+// SET YOUR BTC WALLET ADDRESS HERE
+const BTC_WALLET_ADDRESS = '1Ns22aEqV7Avj7po4DDjeuFggytMxEWCQB';
+
+// $1 per 100 coins
+const DOLLAR_PER_100_COINS = 1;
+
+const COIN_PACKS = [
+    { id: 'tiny',       coins: 100,    icon: '&#x1FA99;', label: null },
+    { id: 'handful',    coins: 500,    icon: '&#x1FA99;', label: null },
+    { id: 'pouch',      coins: 1000,   icon: '&#x1F4B0;', label: null },
+    { id: 'chest',      coins: 2500,   icon: '&#x1F4E6;', label: 'popular' },
+    { id: 'vault',      coins: 5000,   icon: '&#x1F3E6;', label: 'best-value' },
+    { id: 'whale',      coins: 10000,  icon: '&#x1F433;', label: null },
+];
+
+let btcPrice = 71000; // fallback
+
+async function fetchBtcPrice() {
+    try {
+        const resp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+        const data = await resp.json();
+        btcPrice = data.bitcoin.usd;
+    } catch (e) {
+        // Use fallback price
+    }
+    renderCoinGrid();
+}
+
+function usdToBtc(usd) {
+    return (usd / btcPrice).toFixed(8);
+}
+
+function renderCoinGrid() {
+    const grid = document.getElementById('coin-grid');
+    grid.innerHTML = COIN_PACKS.map(pack => {
+        const usd = (pack.coins / 100) * DOLLAR_PER_100_COINS;
+        const btc = usdToBtc(usd);
+        const labelClass = pack.label ? ` ${pack.label}` : '';
+        return `<div class="coin-pack${labelClass}" onclick="confirmPurchase('${pack.id}', ${pack.coins}, ${btc})">
+            <span class="coin-icon-big">${pack.icon}</span>
+            <div class="coin-amount">${pack.coins.toLocaleString()}</div>
+            <div class="coin-bonus">$${usd.toFixed(2)}</div>
+            <button class="coin-price-btn">&#x20BF; ${btc}</button>
+            <div class="coin-what-you-get">${pack.coins.toLocaleString()} coins = $${usd.toFixed(2)}</div>
+        </div>`;
+    }).join('');
+}
+
+fetchBtcPrice();
+
+let pendingPurchase = null;
+
+function setPayMethod(method) {
+    document.getElementById('btc-shop').style.display = method === 'btc' ? 'block' : 'none';
+    document.getElementById('free-shop').style.display = method === 'free' ? 'block' : 'none';
+    document.getElementById('pay-btc-btn').classList.toggle('active', method === 'btc');
+    document.getElementById('pay-free-btn').classList.toggle('active', method === 'free');
+    if (method === 'free') updateFreeOptions();
+}
+
+function confirmPurchase(packId, coins, btcAmount) {
+    pendingPurchase = { packId, coins, btcAmount };
+    const pack = COIN_PACKS[packId];
+
+    document.getElementById('pm-icon').innerHTML = '&#x20BF;';
+    document.getElementById('pm-title').textContent = `Buy ${coins.toLocaleString()} Coins`;
+    document.getElementById('pm-desc').textContent = `Send Bitcoin to complete your purchase:`;
+    document.getElementById('pm-btc-amount').innerHTML = `&#x20BF; ${btcAmount}`;
+    document.getElementById('pm-btc-address').textContent = BTC_WALLET_ADDRESS;
+
+    // Generate QR code using a BIP21 URI
+    const btcUri = `bitcoin:${BTC_WALLET_ADDRESS}?amount=${btcAmount}&label=Stickmen+${coins}+Coins`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(btcUri)}`;
+    document.getElementById('pm-qr-img').src = qrUrl;
+
+    document.getElementById('purchase-modal').classList.add('active');
+}
+
+function copyBtcAddress() {
+    navigator.clipboard.writeText(BTC_WALLET_ADDRESS).then(() => {
+        showToast('BTC address copied!');
+    }).catch(() => {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = BTC_WALLET_ADDRESS;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('BTC address copied!');
+    });
+}
+
+function cancelPurchase() {
+    pendingPurchase = null;
+    document.getElementById('purchase-modal').classList.remove('active');
+}
+
+function executePurchase() {
+    if (!pendingPurchase) return;
+    const { coins, btcAmount } = pendingPurchase;
+
+    document.getElementById('purchase-modal').classList.remove('active');
+
+    // Add coins (in production, verify on-chain payment before crediting)
+    balance += coins;
+    updateBalanceDisplay();
+    saveState();
+
+    // Log the transaction
+    const txLog = JSON.parse(localStorage.getItem('sm2_transactions') || '[]');
+    txLog.push({ date: new Date().toISOString(), coins, btcAmount, address: BTC_WALLET_ADDRESS });
+    localStorage.setItem('sm2_transactions', JSON.stringify(txLog));
+
+    showCoinRain();
+    showToast(`+${coins.toLocaleString()} coins added! Thank you!`);
+    pendingPurchase = null;
+}
+
+function showCoinRain() {
+    const container = document.getElementById('coin-rain');
+    container.innerHTML = '';
+    for (let i = 0; i < 30; i++) {
+        const coin = document.createElement('div');
+        coin.className = 'falling-coin';
+        coin.innerHTML = '&#x1FA99;';
+        coin.style.left = Math.random() * 100 + '%';
+        coin.style.animationDelay = Math.random() * 0.8 + 's';
+        coin.style.fontSize = (1 + Math.random() * 1.5) + 'rem';
+        container.appendChild(coin);
+    }
+    setTimeout(() => container.innerHTML = '', 2500);
+}
+
+// ============================================================
+// FREE COINS — DAILY, SPIN, TRIVIA, STREAK
+// ============================================================
+function checkDailyBonus() {
+    const lastClaim = localStorage.getItem('sm2_lastBonus');
+    const today = new Date().toDateString();
+    if (lastClaim !== today) {
+        balance += 200;
+        updateBalanceDisplay();
+        saveState();
+        localStorage.setItem('sm2_lastBonus', today);
+        showToast("Daily bonus: +200 coins!");
+    }
+}
+
+function claimDaily() {
+    const lastClaim = localStorage.getItem('sm2_lastBonus');
+    const today = new Date().toDateString();
+    if (lastClaim === today) {
+        showToast("Already claimed today! Come back tomorrow.");
+        return;
+    }
+    balance += 200;
+    updateBalanceDisplay();
+    saveState();
+    localStorage.setItem('sm2_lastBonus', today);
+    showCoinRain();
+    showToast("+200 daily coins!");
+    updateFreeOptions();
+}
+
+function claimSpin() {
+    const lastSpin = localStorage.getItem('sm2_lastSpin');
+    const now = Date.now();
+    if (lastSpin && now - parseInt(lastSpin) < 4 * 60 * 60 * 1000) {
+        const remaining = Math.ceil((4 * 60 * 60 * 1000 - (now - parseInt(lastSpin))) / 60000);
+        showToast(`Spin again in ${remaining} minutes!`);
+        return;
+    }
+
+    // Weighted spin: mostly small, occasionally big
+    const roll = Math.random();
+    let reward;
+    if (roll < 0.40) reward = 50;
+    else if (roll < 0.65) reward = 100;
+    else if (roll < 0.80) reward = 200;
+    else if (roll < 0.92) reward = 350;
+    else if (roll < 0.98) reward = 500;
+    else reward = 1000;
+
+    balance += reward;
+    updateBalanceDisplay();
+    saveState();
+    localStorage.setItem('sm2_lastSpin', now.toString());
+    showCoinRain();
+    showToast(`Lucky spin: +${reward} coins!${reward >= 500 ? ' JACKPOT!' : ''}`);
+    updateFreeOptions();
+}
+
+const TRIVIA_QUESTIONS = [
+    { q: 'How many stickmen are in the complete set?', answers: ['25', '50', '100', '75'], correct: 1 },
+    { q: 'What is the rarest card rarity?', answers: ['Epic', 'Rare', 'Legendary', 'Uncommon'], correct: 2 },
+    { q: 'What number is Smurf Stickman?', answers: ['#10', '#25', '#31', '#42'], correct: 1 },
+    { q: 'How many Legendary stickmen exist?', answers: ['1', '5', '3', '10'], correct: 2 },
+    { q: 'What color is Smurf Stickman?', answers: ['Red', 'Green', 'Blue', 'Purple'], correct: 2 },
+    { q: 'What does "The GOAT" stickman hold?', answers: ['A sword', 'A trophy', 'A basketball', 'Lightning'], correct: 1 },
+    { q: 'How many common stickmen are there?', answers: ['10', '15', '20', '25'], correct: 2 },
+    { q: 'What is Ninja Nick\'s rarity?', answers: ['Common', 'Uncommon', 'Rare', 'Epic'], correct: 1 },
+    { q: 'What sport does Sporty Sam play?', answers: ['Football', 'Basketball', 'Soccer', 'Baseball'], correct: 1 },
+    { q: 'What does Pirate Pete wear on his eye?', answers: ['Glasses', 'Nothing', 'An eyepatch', 'A monocle'], correct: 2 },
+    { q: 'What is the name of stickman #50?', answers: ['Cosmic King', 'The GOAT', 'Shadow Ninja', 'Inferno'], correct: 3 },
+    { q: 'What does Viking Vince carry?', answers: ['A sword', 'An axe', 'A shield', 'A spear'], correct: 1 },
+];
+
+function claimTrivia() {
+    const lastTrivia = localStorage.getItem('sm2_lastTrivia');
+    const today = new Date().toDateString();
+    if (lastTrivia === today) {
+        showToast("Trivia done for today! Come back tomorrow.");
+        return;
+    }
+
+    const q = TRIVIA_QUESTIONS[Math.floor(Math.random() * TRIVIA_QUESTIONS.length)];
+    document.getElementById('trivia-question').textContent = q.q;
+
+    const answersDiv = document.getElementById('trivia-answers');
+    answersDiv.innerHTML = q.answers.map((a, i) => `
+        <button class="pm-btn" style="background:${i === q.correct ? '' : ''}#2d3748; color:#fff; width:100%;"
+            onclick="answerTrivia(${i}, ${q.correct})">${a}</button>
+    `).join('');
+
+    document.getElementById('trivia-modal').classList.add('active');
+}
+
+function answerTrivia(chosen, correct) {
+    document.getElementById('trivia-modal').classList.remove('active');
+    const today = new Date().toDateString();
+
+    if (chosen === correct) {
+        balance += 150;
+        updateBalanceDisplay();
+        saveState();
+        localStorage.setItem('sm2_lastTrivia', today);
+        showCoinRain();
+        showToast("Correct! +150 coins!");
+    } else {
+        localStorage.setItem('sm2_lastTrivia', today);
+        showToast("Wrong! Try again tomorrow.");
+    }
+    updateFreeOptions();
+}
+
+function claimStreak() {
+    const streakData = JSON.parse(localStorage.getItem('sm2_streak') || '{"count":0,"lastDate":""}');
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+    if (streakData.lastDate === today) {
+        showToast(`Streak: ${streakData.count}/7 days. Come back tomorrow!`);
+        return;
+    }
+
+    if (streakData.lastDate === yesterday) {
+        streakData.count++;
+    } else {
+        streakData.count = 1;
+    }
+    streakData.lastDate = today;
+
+    if (streakData.count >= 7) {
+        balance += 500;
+        updateBalanceDisplay();
+        saveState();
+        streakData.count = 0;
+        showCoinRain();
+        showToast("7-day streak complete! +500 coins!");
+    } else {
+        showToast(`Streak: ${streakData.count}/7 days!`);
+    }
+
+    localStorage.setItem('sm2_streak', JSON.stringify(streakData));
+    updateFreeOptions();
+}
+
+function updateFreeOptions() {
+    const today = new Date().toDateString();
+
+    // Daily
+    const dailyClaimed = localStorage.getItem('sm2_lastBonus') === today;
+    document.getElementById('free-daily').classList.toggle('claimed', dailyClaimed);
+
+    // Spin
+    const lastSpin = localStorage.getItem('sm2_lastSpin');
+    const spinReady = !lastSpin || Date.now() - parseInt(lastSpin) >= 4 * 60 * 60 * 1000;
+    document.getElementById('free-spin').classList.toggle('claimed', !spinReady);
+
+    // Trivia
+    const triviaDone = localStorage.getItem('sm2_lastTrivia') === today;
+    document.getElementById('free-trivia').classList.toggle('claimed', triviaDone);
+
+    // Streak
+    const streakData = JSON.parse(localStorage.getItem('sm2_streak') || '{"count":0,"lastDate":""}');
+    const streakDoneToday = streakData.lastDate === today;
+    document.getElementById('free-streak').classList.toggle('claimed', streakDoneToday);
+    document.getElementById('streak-desc').textContent = `${streakData.count}/7 days`;
+}
+
+// ============================================================
+// NAVIGATION (updated)
+// ============================================================
+document.querySelectorAll('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(`page-${btn.dataset.page}`).classList.add('active');
+        if (btn.dataset.page === 'collection') renderCollection();
+        if (btn.dataset.page === 'coins') updateFreeOptions();
+        if (btn.dataset.page === 'ideas') { loadIdeas(); renderIdeas(); }
+    });
+});
+
+// ============================================================
+// AUTH & ACCOUNTS
+// ============================================================
+// SETUP: To enable Google Sign-In, create a Google Cloud project:
+// 1. Go to console.cloud.google.com
+// 2. Create project > APIs & Services > Credentials
+// 3. Create OAuth 2.0 Client ID (Web application)
+// 4. Add your domain to Authorized JavaScript origins
+// 5. Paste the Client ID below
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+
+// SETUP: To enable email notifications:
+// 1. Go to emailjs.com and create a free account
+// 2. Add an Email Service (connect your Gmail)
+// 3. Create a template with variables: {{from_name}}, {{cards}}, {{address}}, {{email}}, {{order_id}}
+// 4. Paste your IDs below
+const EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY';
+const EMAILJS_SERVICE_ID = 'YOUR_EMAILJS_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID = 'YOUR_EMAILJS_TEMPLATE_ID';
+const OWNER_EMAIL = 'bartlorang@gmail.com';
+
+let currentUser = null;
+
+function loadUser() {
+    const saved = localStorage.getItem('sm2_user');
+    if (saved) {
+        currentUser = JSON.parse(saved);
+        updateUserUI();
+    }
+}
+
+function saveUser() {
+    localStorage.setItem('sm2_user', JSON.stringify(currentUser));
+}
+
+function updateUserUI() {
+    const avatar = document.getElementById('user-avatar');
+    const name = document.getElementById('user-name');
+    const profileAvatar = document.getElementById('profile-avatar');
+    const profileName = document.getElementById('profile-name');
+    const profileEmail = document.getElementById('profile-email');
+
+    if (currentUser) {
+        avatar.src = currentUser.picture || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%233fb950'/%3E%3Ccircle cx='50' cy='110' r='45' fill='%233fb950'/%3E%3C/svg%3E";
+        name.textContent = currentUser.name?.split(' ')[0] || 'Account';
+        profileAvatar.src = avatar.src;
+        profileName.textContent = currentUser.name || '';
+        profileEmail.textContent = currentUser.email || '';
+        document.getElementById('account-signed-out').style.display = 'none';
+        document.getElementById('account-signed-in').style.display = 'block';
+        document.getElementById('account-subtitle').textContent = `Welcome back, ${currentUser.name?.split(' ')[0]}!`;
+        loadAddress();
+        loadOrderHistory();
+    } else {
+        avatar.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%238892b0'/%3E%3Ccircle cx='50' cy='110' r='45' fill='%238892b0'/%3E%3C/svg%3E";
+        name.textContent = 'Sign In';
+        document.getElementById('account-signed-out').style.display = 'block';
+        document.getElementById('account-signed-in').style.display = 'none';
+        document.getElementById('account-subtitle').textContent = 'Sign in to save your collection and get cards shipped!';
+    }
+}
+
+function handleUserClick() {
+    if (currentUser) {
+        // Navigate to account page
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-page="account"]').classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-account').classList.add('active');
+    } else {
+        showAuthModal();
+    }
+}
+
+function showAuthModal() {
+    document.getElementById('auth-modal').classList.add('active');
+}
+
+function closeAuthModal() {
+    document.getElementById('auth-modal').classList.remove('active');
+}
+
+// Google Sign-In
+function googleSignIn() {
+    if (typeof google !== 'undefined' && google.accounts && GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
+        google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleResponse,
+        });
+        google.accounts.id.prompt();
+    } else {
+        // Demo mode — simulate Google sign-in with prompt
+        const name = prompt('Google Sign-In (demo mode)\n\nEnter your name:');
+        if (name) {
+            const email = prompt('Enter your email:');
+            if (email) {
+                currentUser = { name, email, picture: null, provider: 'google' };
+                saveUser();
+                closeAuthModal();
+                updateUserUI();
+                showToast(`Welcome, ${name}!`);
+            }
+        }
+    }
+}
+
+function handleGoogleResponse(response) {
+    // Decode JWT token from Google
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    currentUser = {
+        name: payload.name,
+        email: payload.email,
+        picture: payload.picture,
+        provider: 'google',
+        sub: payload.sub,
+    };
+    saveUser();
+    closeAuthModal();
+    updateUserUI();
+    showToast(`Welcome, ${payload.given_name}!`);
+}
+
+// Apple Sign-In
+function appleSignIn() {
+    // Apple Sign-In requires Apple Developer account + server-side setup
+    // For now, use demo mode
+    const name = prompt('Apple Sign-In (demo mode)\n\nEnter your name:');
+    if (name) {
+        const email = prompt('Enter your email:');
+        if (email) {
+            currentUser = { name, email, picture: null, provider: 'apple' };
+            saveUser();
+            closeAuthModal();
+            updateUserUI();
+            showToast(`Welcome, ${name}!`);
+        }
+    }
+}
+
+// Email Sign-In
+function emailSignIn() {
+    const email = document.getElementById('email-signin').value.trim();
+    if (!email || !email.includes('@')) {
+        showToast('Please enter a valid email!');
+        return;
+    }
+    const name = prompt('What\'s your name?');
+    if (name) {
+        currentUser = { name, email, picture: null, provider: 'email' };
+        saveUser();
+        closeAuthModal();
+        updateUserUI();
+        showToast(`Welcome, ${name}!`);
+    }
+}
+
+function signOut() {
+    currentUser = null;
+    localStorage.removeItem('sm2_user');
+    updateUserUI();
+    showToast('Signed out!');
+}
+
+// ============================================================
+// SHIPPING ADDRESS
+// ============================================================
+function loadAddress() {
+    const addr = JSON.parse(localStorage.getItem('sm2_address') || 'null');
+    if (addr) {
+        document.getElementById('addr-name').value = addr.name || '';
+        document.getElementById('addr-street').value = addr.street || '';
+        document.getElementById('addr-apt').value = addr.apt || '';
+        document.getElementById('addr-city').value = addr.city || '';
+        document.getElementById('addr-state').value = addr.state || '';
+        document.getElementById('addr-zip').value = addr.zip || '';
+    }
+}
+
+function saveAddress(e) {
+    e.preventDefault();
+    const addr = {
+        name: document.getElementById('addr-name').value,
+        street: document.getElementById('addr-street').value,
+        apt: document.getElementById('addr-apt').value,
+        city: document.getElementById('addr-city').value,
+        state: document.getElementById('addr-state').value,
+        zip: document.getElementById('addr-zip').value,
+    };
+    localStorage.setItem('sm2_address', JSON.stringify(addr));
+    const badge = document.getElementById('addr-saved');
+    badge.style.display = 'inline';
+    setTimeout(() => badge.style.display = 'none', 2000);
+    showToast('Address saved!');
+}
+
+function getAddressString() {
+    const addr = JSON.parse(localStorage.getItem('sm2_address') || 'null');
+    if (!addr || !addr.street) return null;
+    let str = `${addr.name}, ${addr.street}`;
+    if (addr.apt) str += ` ${addr.apt}`;
+    str += `, ${addr.city}, ${addr.state} ${addr.zip}`;
+    return str;
+}
+
+// ============================================================
+// ORDER HISTORY
+// ============================================================
+function saveOrder(cards) {
+    const orders = JSON.parse(localStorage.getItem('sm2_orders') || '[]');
+    const orderId = 'STK-' + Date.now().toString(36).toUpperCase();
+    orders.unshift({
+        id: orderId,
+        date: new Date().toISOString(),
+        cards: cards.map(c => ({ num: c.num, name: c.name, rarity: c.rarity })),
+        address: getAddressString(),
+        user: currentUser?.name || 'Guest',
+    });
+    localStorage.setItem('sm2_orders', JSON.stringify(orders));
+    return orderId;
+}
+
+function loadOrderHistory() {
+    const orders = JSON.parse(localStorage.getItem('sm2_orders') || '[]');
+    const el = document.getElementById('order-history');
+    if (orders.length === 0) {
+        el.innerHTML = 'No orders yet. Open some packs!';
+        return;
+    }
+    el.innerHTML = orders.slice(0, 10).map(o => {
+        const date = new Date(o.date).toLocaleDateString();
+        const cardList = o.cards.map(c => `<span style="color:${RARITY_COLORS[c.rarity]}">#${String(c.num).padStart(2,'0')} ${c.name}</span>`).join(', ');
+        return `<div style="padding:0.8rem 0; border-bottom:1px solid #21262d;">
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:#e94560; font-weight:700;">${o.id}</span>
+                <span style="color:#484f58; font-size:0.8rem;">${date}</span>
+            </div>
+            <div style="font-size:0.85rem; margin-top:0.3rem;">${cardList}</div>
+        </div>`;
+    }).join('');
+}
+
+// ============================================================
+// EMAIL NOTIFICATION TO OWNER
+// ============================================================
+function sendOrderEmail(orderId, cards, userInfo) {
+    const cardDetails = cards.map(c =>
+        `#${String(c.num).padStart(2,'0')} ${c.name} (${c.rarity.toUpperCase()})`
+    ).join('\n');
+
+    const address = getAddressString() || 'No address on file';
+
+    // Try EmailJS first
+    if (EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            to_email: OWNER_EMAIL,
+            from_name: userInfo.name || 'Guest',
+            email: userInfo.email || 'N/A',
+            order_id: orderId,
+            cards: cardDetails,
+            address: address,
+        }).then(() => {
+            console.log('Order email sent via EmailJS');
+        }).catch(err => {
+            console.log('EmailJS failed, using fallback:', err);
+            sendFallbackEmail(orderId, cards, userInfo, address);
+        });
+    } else {
+        // Fallback: use mailto link (opens email client)
+        sendFallbackEmail(orderId, cards, userInfo, address);
+    }
+}
+
+function sendFallbackEmail(orderId, cards, userInfo, address) {
+    const cardDetails = cards.map(c =>
+        `#${String(c.num).padStart(2,'0')} ${c.name} (${c.rarity.toUpperCase()})`
+    ).join('%0A');
+
+    const subject = encodeURIComponent(`STICKMEN Order ${orderId} - ${userInfo.name || 'Guest'}`);
+    const body = encodeURIComponent(
+        `New Stickmen Order!\n\n` +
+        `Order ID: ${orderId}\n` +
+        `Customer: ${userInfo.name || 'Guest'}\n` +
+        `Email: ${userInfo.email || 'N/A'}\n` +
+        `Address: ${address}\n\n` +
+        `Cards Pulled:\n` +
+        cards.map(c => `  #${String(c.num).padStart(2,'0')} ${c.name} (${c.rarity.toUpperCase()})`).join('\n')
+    );
+
+    // Send via a hidden form to Formspree as another fallback
+    // For now, log to console and store locally
+    console.log(`📧 Order notification for ${OWNER_EMAIL}:`, { orderId, cards: cards.map(c => c.name), address, user: userInfo });
+
+    // Store notification locally for review
+    const notifications = JSON.parse(localStorage.getItem('sm2_notifications') || '[]');
+    notifications.unshift({
+        orderId,
+        date: new Date().toISOString(),
+        user: userInfo,
+        cards: cards.map(c => ({ num: c.num, name: c.name, rarity: c.rarity })),
+        address,
+    });
+    localStorage.setItem('sm2_notifications', JSON.stringify(notifications));
+}
+
+// ============================================================
+// UPDATED CLOSE REVEAL — SHIPPING FLOW
+// ============================================================
+const _originalCloseReveal = typeof closeReveal === 'function' ? closeReveal : null;
+// (closeReveal is defined earlier, we override it below)
+
+// ============================================================
+// IDEAS / SUGGESTIONS SYSTEM
+// ============================================================
+let ideas = [];
+let ideasSort = 'newest';
+
+function loadIdeas() {
+    ideas = JSON.parse(localStorage.getItem('sm2_ideas') || '[]');
+}
+
+function saveIdeas() {
+    localStorage.setItem('sm2_ideas', JSON.stringify(ideas));
+}
+
+function submitIdea(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('idea-name').value.trim();
+    const desc = document.getElementById('idea-desc').value.trim();
+    const rarity = document.getElementById('idea-rarity').value;
+    const category = document.getElementById('idea-category').value.trim() || 'General';
+
+    if (!name || !desc) return;
+
+    const userName = currentUser?.name || 'Anonymous';
+    const userPic = currentUser?.picture || null;
+
+    ideas.unshift({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        name,
+        desc,
+        rarity,
+        category,
+        user: userName,
+        userPic,
+        votes: 0,
+        votedBy: [],
+        replies: [],
+        date: new Date().toISOString(),
+    });
+
+    saveIdeas();
+    document.getElementById('idea-form').reset();
+    document.getElementById('idea-char-count').textContent = '0/200';
+    renderIdeas();
+    showToast(`"${name}" submitted! Let the votes roll in!`);
+}
+
+function renderIdeas() {
+    const feed = document.getElementById('ideas-feed');
+    const countEl = document.getElementById('ideas-count');
+    countEl.textContent = `${ideas.length} idea${ideas.length !== 1 ? 's' : ''} posted`;
+
+    if (ideas.length === 0) {
+        feed.innerHTML = `<div class="no-ideas">
+            <div class="big-icon">&#x1F4A1;</div>
+            <p>No ideas yet! Be the first to suggest a stickman!</p>
+        </div>`;
+        return;
+    }
+
+    let sorted = [...ideas];
+    if (ideasSort === 'top') {
+        sorted.sort((a, b) => b.votes - a.votes);
+    }
+    // newest is default order (already sorted by date desc)
+
+    const userId = currentUser?.email || currentUser?.name || 'anon_' + navigator.userAgent.slice(0, 20);
+
+    feed.innerHTML = sorted.map(idea => {
+        const hasVoted = idea.votedBy.includes(userId);
+        const timeAgo = getTimeAgo(idea.date);
+        const avatarSrc = idea.userPic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='20' fill='%238892b0'/%3E%3Ccircle cx='50' cy='110' r='45' fill='%238892b0'/%3E%3C/svg%3E";
+
+        const repliesHtml = idea.replies.length > 0 ? `
+            <div class="idea-replies">
+                ${idea.replies.map(r => `
+                    <div class="idea-reply">
+                        <span class="reply-user">${escapeHtml(r.user)}</span>
+                        <span class="reply-time">${getTimeAgo(r.date)}</span>
+                        <div class="reply-text">${escapeHtml(r.text)}</div>
+                    </div>
+                `).join('')}
+            </div>` : '';
+
+        return `<div class="idea-card">
+            <div class="idea-header">
+                <div class="idea-user">
+                    <img class="idea-user-avatar" src="${avatarSrc}" alt=""/>
+                    <span class="idea-user-name">${escapeHtml(idea.user)}</span>
+                </div>
+                <span class="idea-time">${timeAgo}</span>
+            </div>
+            <div class="idea-title">${escapeHtml(idea.name)}</div>
+            <div class="idea-body">${escapeHtml(idea.desc)}</div>
+            <div class="idea-tags">
+                <span class="idea-tag" style="background:${RARITY_COLORS[idea.rarity]}22; color:${RARITY_COLORS[idea.rarity]};">${idea.rarity}</span>
+                <span class="idea-tag" style="background:#21262d; color:#8892b0;">${escapeHtml(idea.category)}</span>
+            </div>
+            <div class="idea-footer">
+                <button class="idea-vote-btn${hasVoted ? ' voted' : ''}" onclick="voteIdea('${idea.id}')">
+                    &#x1F44D; ${idea.votes}
+                </button>
+                <button class="idea-reply-btn" onclick="toggleReply('${idea.id}')">&#x1F4AC; Reply (${idea.replies.length})</button>
+                <button class="idea-delete-btn" onclick="deleteIdea('${idea.id}')" title="Delete">&#x1F5D1;</button>
+            </div>
+            ${repliesHtml}
+            <div class="reply-input-wrap" id="reply-${idea.id}">
+                <input type="text" placeholder="Write a reply..." id="reply-input-${idea.id}" maxlength="150" onkeydown="if(event.key==='Enter')sendReply('${idea.id}')"/>
+                <button class="reply-send-btn" onclick="sendReply('${idea.id}')">Send</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function voteIdea(ideaId) {
+    const idea = ideas.find(i => i.id === ideaId);
+    if (!idea) return;
+
+    const userId = currentUser?.email || currentUser?.name || 'anon_' + navigator.userAgent.slice(0, 20);
+
+    if (idea.votedBy.includes(userId)) {
+        // Unvote
+        idea.votedBy = idea.votedBy.filter(v => v !== userId);
+        idea.votes = Math.max(0, idea.votes - 1);
+    } else {
+        idea.votedBy.push(userId);
+        idea.votes++;
+    }
+
+    saveIdeas();
+    renderIdeas();
+}
+
+function toggleReply(ideaId) {
+    const wrap = document.getElementById(`reply-${ideaId}`);
+    wrap.classList.toggle('active');
+    if (wrap.classList.contains('active')) {
+        document.getElementById(`reply-input-${ideaId}`).focus();
+    }
+}
+
+function sendReply(ideaId) {
+    const input = document.getElementById(`reply-input-${ideaId}`);
+    const text = input.value.trim();
+    if (!text) return;
+
+    const idea = ideas.find(i => i.id === ideaId);
+    if (!idea) return;
+
+    idea.replies.push({
+        user: currentUser?.name || 'Anonymous',
+        text,
+        date: new Date().toISOString(),
+    });
+
+    saveIdeas();
+    renderIdeas();
+}
+
+function deleteIdea(ideaId) {
+    if (!confirm('Delete this idea?')) return;
+    ideas = ideas.filter(i => i.id !== ideaId);
+    saveIdeas();
+    renderIdeas();
+    showToast('Idea deleted.');
+}
+
+function sortIdeas(sort, btn) {
+    ideasSort = sort;
+    document.querySelectorAll('#page-ideas .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderIdeas();
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function getTimeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(dateStr).toLocaleDateString();
+}
+
+// Character counter for description
+document.addEventListener('DOMContentLoaded', () => {
+    const desc = document.getElementById('idea-desc');
+    if (desc) {
+        desc.addEventListener('input', () => {
+            document.getElementById('idea-char-count').textContent = `${desc.value.length}/200`;
+        });
+    }
+});
+
+// ============================================================
+// CARD IMAGE STORAGE (for admin uploads)
+// ============================================================
+let cardImages = {};
+
+function loadCardImages() {
+    try {
+        cardImages = JSON.parse(localStorage.getItem('sm2_cardImages') || '{}');
+    } catch (e) {
+        cardImages = {};
+    }
+}
+
+function saveCardImages() {
+    localStorage.setItem('sm2_cardImages', JSON.stringify(cardImages));
+}
+
+function getCardImage(num) {
+    return cardImages[num] || null;
+}
+
+function setCardImage(num, dataUrl) {
+    cardImages[num] = dataUrl;
+    saveCardImages();
+}
+
+function removeCardImage(num) {
+    delete cardImages[num];
+    saveCardImages();
+}
+
+function clearAllCardImages() {
+    if (confirm('Reset ALL card images back to default SVG stickmen?')) {
+        cardImages = {};
+        saveCardImages();
+        renderAdminPage();
+        showToast('All card images reset to SVG!');
+    }
+}
+
+// Compress uploaded image to fit in localStorage
+function processImage(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const maxW = 300;
+            const maxH = 400;
+            let w = img.width;
+            let h = img.height;
+
+            // Scale down to fit
+            if (w > maxW || h > maxH) {
+                const ratio = Math.min(maxW / w, maxH / h);
+                w = Math.floor(w * ratio);
+                h = Math.floor(h * ratio);
+            }
+
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            // Compress as JPEG
+            const result = canvas.toDataURL('image/jpeg', 0.7);
+            callback(result);
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+// ============================================================
+// ADMIN — CARD ART STUDIO (kid-friendly)
+// ============================================================
+function checkAdminHash() {
+    if (window.location.hash === '#admin') {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById('page-admin').classList.add('active');
+        renderAdminPage();
+    }
+}
+
+function renderAdminPage() {
+    const grid = document.getElementById('admin-grid');
+    grid.innerHTML = ALL_STICKMEN.map(s => {
+        const hasImage = !!getCardImage(s.num);
+        const imgClass = hasImage ? ' has-image' : '';
+
+        let artContent;
+        if (hasImage) {
+            artContent = `<img src="${getCardImage(s.num)}" alt="${s.name}"/>`;
+        } else {
+            artContent = `<div class="admin-add-icon">&#x1F4F7;</div>
+                <div class="admin-add-text">Tap to add</div>`;
+        }
+
+        const removeBtn = hasImage
+            ? `<div class="admin-remove-x" onclick="event.stopPropagation(); handleAdminRemove(${s.num})" title="Remove picture">&#x2715;</div>`
+            : '';
+
+        return `<div class="admin-card" onclick="triggerAdminUpload(${s.num})">
+            ${removeBtn}
+            <div class="admin-card-art${imgClass}" id="admin-art-${s.num}"
+                ondragover="event.preventDefault(); this.classList.add('dragover');"
+                ondragleave="this.classList.remove('dragover');"
+                ondrop="event.preventDefault(); this.classList.remove('dragover'); handleAdminDrop(${s.num}, event);">
+                ${artContent}
+                <div class="admin-tap-hint"><span class="admin-tap-hint-text"></span></div>
+            </div>
+            <div class="admin-card-num" style="color:${RARITY_COLORS[s.rarity]}">#${String(s.num).padStart(2,'0')}</div>
+            <div class="admin-card-name">${s.name}</div>
+            <input type="file" accept="image/*" id="admin-file-${s.num}" style="display:none;" onchange="handleAdminFileSelect(${s.num}, this)"/>
+        </div>`;
+    }).join('');
+}
+
+function triggerAdminUpload(num) {
+    document.getElementById(`admin-file-${num}`).click();
+}
+
+function handleAdminFileSelect(num, input) {
+    const file = input.files[0];
+    if (!file) return;
+    uploadCardImage(num, file);
+    input.value = ''; // reset so same file can be re-selected
+}
+
+function handleAdminDrop(num, event) {
+    const file = event.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) {
+        showToast('Drop a picture here!');
+        return;
+    }
+    uploadCardImage(num, file);
+}
+
+function uploadCardImage(num, file) {
+    if (!file.type.startsWith('image/')) {
+        showToast('That\'s not a picture! Try again.');
+        return;
+    }
+
+    processImage(file, function(dataUrl) {
+        setCardImage(num, dataUrl);
+        renderAdminPage();
+        const stickman = ALL_STICKMEN.find(s => s.num === num);
+        showToast(`${stickman.name} got a new look!`);
+    });
+}
+
+function handleAdminRemove(num) {
+    const stickman = ALL_STICKMEN.find(s => s.num === num);
+    removeCardImage(num);
+    renderAdminPage();
+    showToast(`${stickman.name} is back to normal!`);
+}
+
+window.addEventListener('hashchange', checkAdminHash);
+
+// Clear hash when clicking regular nav buttons
+document.querySelectorAll('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (window.location.hash) history.replaceState(null, '', ' ');
+    });
+});
+
+// ============================================================
+// INIT
+// ============================================================
+loadCardImages();
+loadIdeas();
+loadState();
+loadUser();
+checkDailyBonus();
+checkAdminHash();
+</script>
+
+</body>
+</html>
