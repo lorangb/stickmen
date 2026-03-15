@@ -1724,6 +1724,83 @@ const ALL_STICKMEN = [
     { num: 50, name: 'Inferno',          category: 'Legend',     rarity: 'legendary',  color: '#ff3838', hat: 'flamehelmet', item: 'firesword',    special: 'flames' },
 ];
 
+// ============================================================
+// HOLIDAY-EXCLUSIVE STICKMEN — only appear in holiday packs
+// ============================================================
+const HOLIDAY_STICKMEN = {
+    // ST. PATRICK'S DAY
+    stpat: [
+        { num: 101, name: 'Lucky Larry',       category: "St. Pat's",  rarity: 'common',    color: '#00b894', hat: 'straw',      item: null,           special: 'sparkles', holiday: 'stpat' },
+        { num: 102, name: 'Shamrock Shawn',    category: "St. Pat's",  rarity: 'common',    color: '#3fb950', hat: 'cowboy',      item: null,           special: null,        holiday: 'stpat' },
+        { num: 103, name: 'Green Machine',     category: "St. Pat's",  rarity: 'uncommon',  color: '#00b894', hat: 'headband',    item: null,           special: 'sparkles', holiday: 'stpat' },
+        { num: 104, name: 'Pot O Gold Pete',   category: "St. Pat's",  rarity: 'rare',      color: '#ffd700', hat: 'straw',       item: 'trophy',       special: 'sparkles', holiday: 'stpat' },
+        { num: 105, name: 'The Leprechaun',    category: "St. Pat's",  rarity: 'legendary', color: '#00b894', hat: 'cowboy',      item: 'trophy',       special: 'rainbow',  holiday: 'stpat' },
+    ],
+
+    // VALENTINE'S DAY
+    vday: [
+        { num: 111, name: 'Heartthrob Harry',  category: "Valentine's", rarity: 'common',   color: '#fd79a8', hat: null,          item: 'balloon',      special: null,        holiday: 'vday' },
+        { num: 112, name: 'Cupid Carl',        category: "Valentine's", rarity: 'common',   color: '#e94560', hat: null,          item: null,           special: 'sparkles', holiday: 'vday' },
+        { num: 113, name: 'Love Letter Lou',   category: "Valentine's", rarity: 'uncommon', color: '#fd79a8', hat: 'beret',       item: 'letter',       special: 'sparkles', holiday: 'vday' },
+        { num: 114, name: 'Rose Rick',         category: "Valentine's", rarity: 'rare',     color: '#e94560', hat: null,          item: 'paintbrush',   special: 'sparkles', holiday: 'vday' },
+        { num: 115, name: 'King of Hearts',    category: "Valentine's", rarity: 'legendary',color: '#e94560', hat: 'crown',       item: 'scepter',      special: 'sparkles', holiday: 'vday' },
+    ],
+
+    // NEW YEAR'S
+    nye: [
+        { num: 121, name: 'Countdown Carl',    category: "New Year's",  rarity: 'common',   color: '#ffd700', hat: 'clown',       item: null,           special: 'sparkles', holiday: 'nye' },
+        { num: 122, name: 'Party Pete',        category: "New Year's",  rarity: 'common',   color: '#a29bfe', hat: 'afro',        item: null,           special: 'sparkles', holiday: 'nye' },
+        { num: 123, name: 'Confetti King',     category: "New Year's",  rarity: 'uncommon', color: '#ffd700', hat: 'crown',       item: null,           special: 'sparkles', holiday: 'nye' },
+        { num: 124, name: 'Firework Fred',     category: "New Year's",  rarity: 'rare',     color: '#ff6b35', hat: null,          item: null,           special: 'flames',   holiday: 'nye' },
+        { num: 125, name: 'Midnight Legend',   category: "New Year's",  rarity: 'legendary',color: '#ffd700', hat: 'cosmic',      item: 'orb',          special: 'stars',    holiday: 'nye' },
+    ],
+
+    // EASTER
+    easter: [
+        { num: 131, name: 'Egg Hunter Eddie',  category: 'Easter',     rarity: 'common',    color: '#ffeaa7', hat: null,          item: null,           special: null,        holiday: 'easter' },
+        { num: 132, name: 'Bunny Boy',         category: 'Easter',     rarity: 'common',    color: '#dfe6e9', hat: null,          item: null,           special: null,        holiday: 'easter' },
+        { num: 133, name: 'Chick Charlie',     category: 'Easter',     rarity: 'uncommon',  color: '#ffeaa7', hat: null,          item: null,           special: 'sparkles', holiday: 'easter' },
+        { num: 134, name: 'Pastel Pete',       category: 'Easter',     rarity: 'rare',      color: '#a29bfe', hat: 'beret',       item: 'paintbrush',   special: 'sparkles', holiday: 'easter' },
+        { num: 135, name: 'Golden Egg',        category: 'Easter',     rarity: 'legendary', color: '#ffd700', hat: 'crown',       item: 'trophy',       special: 'rainbow',  holiday: 'easter' },
+    ],
+
+    // 4TH OF JULY
+    july4: [
+        { num: 141, name: 'Sparkler Sam',      category: '4th of July', rarity: 'common',   color: '#e94560', hat: 'headband',    item: null,           special: 'sparkles', holiday: 'july4' },
+        { num: 142, name: 'Patriot Paul',      category: '4th of July', rarity: 'common',   color: '#58a6ff', hat: null,          item: 'flag',         special: null,        holiday: 'july4' },
+        { num: 143, name: 'Rocket Rick',       category: '4th of July', rarity: 'uncommon', color: '#e94560', hat: null,          item: null,           special: 'flames',   holiday: 'july4' },
+        { num: 144, name: 'Eagle Eye',         category: '4th of July', rarity: 'rare',     color: '#fff',    hat: 'cowboy',      item: 'shield',       special: 'stars',    holiday: 'july4' },
+        { num: 145, name: 'Lady Liberty',      category: '4th of July', rarity: 'legendary',color: '#3fb950', hat: 'cosmic',      item: 'staff',        special: 'stars',    holiday: 'july4' },
+    ],
+
+    // HALLOWEEN
+    halloween: [
+        { num: 151, name: 'Ghosty Gus',        category: 'Halloween',  rarity: 'common',    color: '#dfe6e9', hat: null,          item: null,           special: 'shadow',   holiday: 'halloween' },
+        { num: 152, name: 'Pumpkin Pat',        category: 'Halloween',  rarity: 'common',    color: '#ff6b35', hat: null,          item: null,           special: null,        holiday: 'halloween' },
+        { num: 153, name: 'Witch Wanda',        category: 'Halloween',  rarity: 'uncommon',  color: '#6c5ce7', hat: 'wizard',      item: 'staff',        special: 'sparkles', holiday: 'halloween' },
+        { num: 154, name: 'Vampire Vic',        category: 'Halloween',  rarity: 'rare',      color: '#2d3436', hat: null,          item: null,           special: 'shadow',   holiday: 'halloween' },
+        { num: 155, name: 'The Reaper',         category: 'Halloween',  rarity: 'legendary', color: '#2d3436', hat: 'ninja',       item: 'greatsword',   special: 'shadow',   holiday: 'halloween' },
+    ],
+
+    // THANKSGIVING
+    thanks: [
+        { num: 161, name: 'Turkey Tom',        category: 'Thanksgiving',rarity: 'common',   color: '#c4a35a', hat: 'straw',       item: null,           special: null,        holiday: 'thanks' },
+        { num: 162, name: 'Pilgrim Pete',      category: 'Thanksgiving',rarity: 'common',   color: '#636e72', hat: 'bucket',      item: null,           special: null,        holiday: 'thanks' },
+        { num: 163, name: 'Gravy Gary',        category: 'Thanksgiving',rarity: 'uncommon', color: '#c4a35a', hat: 'chef',        item: 'frypan',       special: null,        holiday: 'thanks' },
+        { num: 164, name: 'Cornucopia Carl',   category: 'Thanksgiving',rarity: 'rare',     color: '#ff6b35', hat: 'straw',       item: 'trophy',       special: 'sparkles', holiday: 'thanks' },
+        { num: 165, name: 'The Feast King',    category: 'Thanksgiving',rarity: 'legendary',color: '#ffd700', hat: 'crown',       item: 'scepter',      special: 'sparkles', holiday: 'thanks' },
+    ],
+
+    // CHRISTMAS
+    xmas: [
+        { num: 171, name: 'Elf Eddie',         category: 'Christmas',  rarity: 'common',    color: '#3fb950', hat: 'nightcap',    item: null,           special: null,        holiday: 'xmas' },
+        { num: 172, name: 'Snowman Steve',     category: 'Christmas',  rarity: 'common',    color: '#dfe6e9', hat: 'bucket',      item: null,           special: 'snowflakes',holiday: 'xmas' },
+        { num: 173, name: 'Reindeer Rick',     category: 'Christmas',  rarity: 'uncommon',  color: '#c4a35a', hat: 'viking',      item: null,           special: 'sparkles', holiday: 'xmas' },
+        { num: 174, name: 'Mrs. Claus',        category: 'Christmas',  rarity: 'rare',      color: '#e94560', hat: 'nightcap',    item: null,           special: 'snowflakes',holiday: 'xmas' },
+        { num: 175, name: 'Santa Stickman',    category: 'Christmas',  rarity: 'legendary', color: '#e94560', hat: 'nightcap',    item: 'trophy',       special: 'stars',    holiday: 'xmas' },
+    ],
+};
+
 const RARITY_COLORS = { common: '#8892b0', uncommon: '#58a6ff', rare: '#bc8cff', epic: '#e94560', legendary: '#ffd700' };
 
 // ============================================================
@@ -1847,15 +1924,25 @@ function rollRarity(packType) {
 
 function generateCard(packType) {
     const rarity = rollRarity(packType);
-    const themePool = PACK_POOLS[packType];
+
+    // Check if this is a holiday pack — pull ONLY from holiday-exclusive stickmen
+    const holidayPool = HOLIDAY_STICKMEN[packType];
     let pool;
-    if (themePool) {
-        // Themed pack: prefer stickmen from the theme, but fall back to rarity pool if no match
-        pool = ALL_STICKMEN.filter(s => themePool.includes(s.num) && s.rarity === rarity);
-        if (pool.length === 0) pool = ALL_STICKMEN.filter(s => themePool.includes(s.num));
-        if (pool.length === 0) pool = ALL_STICKMEN.filter(s => s.rarity === rarity);
+
+    if (holidayPool) {
+        // Holiday pack: only holiday stickmen, matched by rarity
+        pool = holidayPool.filter(s => s.rarity === rarity);
+        // If no match for this rarity, pick any from the holiday set
+        if (pool.length === 0) pool = [...holidayPool];
     } else {
-        pool = ALL_STICKMEN.filter(s => s.rarity === rarity);
+        const themePool = PACK_POOLS[packType];
+        if (themePool) {
+            pool = ALL_STICKMEN.filter(s => themePool.includes(s.num) && s.rarity === rarity);
+            if (pool.length === 0) pool = ALL_STICKMEN.filter(s => themePool.includes(s.num));
+            if (pool.length === 0) pool = ALL_STICKMEN.filter(s => s.rarity === rarity);
+        } else {
+            pool = ALL_STICKMEN.filter(s => s.rarity === rarity);
+        }
     }
     const stickman = pool[Math.floor(Math.random() * pool.length)];
 
@@ -3559,7 +3646,9 @@ function checkAdminHash() {
 
 function renderAdminPage() {
     const grid = document.getElementById('admin-grid');
-    grid.innerHTML = ALL_STICKMEN.map(s => {
+    // Combine regular + all holiday stickmen for admin editing
+    const allCards = [...ALL_STICKMEN, ...Object.values(HOLIDAY_STICKMEN).flat()];
+    grid.innerHTML = allCards.map(s => {
         const hasImage = !!getCardImage(s.num);
         const imgClass = hasImage ? ' has-image' : '';
 
