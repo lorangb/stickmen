@@ -2996,6 +2996,45 @@ function closeAuthModal() {
 }
 
 // Google Sign-In
+// Helper: sign in a new user with duplicate name check
+function signInNewUser(email, provider) {
+    let name = prompt('Welcome! What\'s your name?');
+    if (!name) return;
+    name = name.trim();
+    if (!name) return;
+
+    if (isNameTaken(name)) {
+        showToast(`"${name}" is already taken! Pick a different name.`);
+        // Try again
+        let retry = prompt(`"${name}" is taken. Try a different name:`);
+        if (!retry) return;
+        retry = retry.trim();
+        if (isNameTaken(retry)) {
+            showToast(`"${retry}" is also taken! Try again later.`);
+            return;
+        }
+        name = retry;
+    }
+
+    currentUser = { name, email, picture: null, provider };
+    saveUser();
+    addKnownUser(currentUser);
+    closeAuthModal();
+    updateUserUI();
+    showToast(`Welcome, ${name}!`);
+}
+
+// Helper: sign in a returning user
+function signInReturningUser(known, provider) {
+    currentUser = { name: known.name, email: known.email, picture: known.picture, provider: provider || known.provider };
+    saveUser();
+    addKnownUser(currentUser);
+    restoreUserData(known.email);
+    closeAuthModal();
+    updateUserUI();
+    showToast(`Welcome back, ${known.name}!`);
+}
+
 function googleSignIn() {
     if (typeof google !== 'undefined' && google.accounts && GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
         google.accounts.id.initialize({
@@ -3004,48 +3043,38 @@ function googleSignIn() {
         });
         google.accounts.id.prompt();
     } else {
-        // Demo mode
         const email = prompt('Google Sign-In\n\nEnter your email:');
         if (!email) return;
-        // Check if returning user
         const known = getKnownUsers().find(u => u.email.toLowerCase() === email.toLowerCase());
         if (known) {
-            currentUser = { name: known.name, email: known.email, picture: known.picture, provider: 'google' };
-            saveUser();
-            addKnownUser(currentUser);
-            restoreUserData(known.email);
-            closeAuthModal();
-            updateUserUI();
-            showToast(`Welcome back, ${known.name}!`);
+            signInReturningUser(known, 'google');
         } else {
-            const name = prompt('Welcome! What\'s your name?');
-            if (name) {
-                currentUser = { name, email, picture: null, provider: 'google' };
-                saveUser();
-                addKnownUser(currentUser);
-                closeAuthModal();
-                updateUserUI();
-                showToast(`Welcome, ${name}!`);
-            }
+            signInNewUser(email, 'google');
         }
     }
 }
 
 function handleGoogleResponse(response) {
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    currentUser = {
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture,
-        provider: 'google',
-        sub: payload.sub,
-    };
-    saveUser();
-    addKnownUser(currentUser);
-    restoreUserData(payload.email);
-    closeAuthModal();
-    updateUserUI();
-    showToast(`Welcome, ${payload.given_name}!`);
+    const known = getKnownUsers().find(u => u.email.toLowerCase() === payload.email.toLowerCase());
+    if (known) {
+        // Update picture from Google
+        known.picture = payload.picture;
+        signInReturningUser(known, 'google');
+    } else {
+        // Check name isn't taken
+        let name = payload.name;
+        if (isNameTaken(name)) {
+            name = name + ' ' + payload.email.split('@')[0].slice(0, 3);
+        }
+        currentUser = { name, email: payload.email, picture: payload.picture, provider: 'google', sub: payload.sub };
+        saveUser();
+        addKnownUser(currentUser);
+        restoreUserData(payload.email);
+        closeAuthModal();
+        updateUserUI();
+        showToast(`Welcome, ${name}!`);
+    }
 }
 
 // Apple Sign-In
@@ -3054,23 +3083,9 @@ function appleSignIn() {
     if (!email) return;
     const known = getKnownUsers().find(u => u.email.toLowerCase() === email.toLowerCase());
     if (known) {
-        currentUser = { name: known.name, email: known.email, picture: known.picture, provider: 'apple' };
-        saveUser();
-        addKnownUser(currentUser);
-        restoreUserData(known.email);
-        closeAuthModal();
-        updateUserUI();
-        showToast(`Welcome back, ${known.name}!`);
+        signInReturningUser(known, 'apple');
     } else {
-        const name = prompt('Welcome! What\'s your name?');
-        if (name) {
-            currentUser = { name, email, picture: null, provider: 'apple' };
-            saveUser();
-            addKnownUser(currentUser);
-            closeAuthModal();
-            updateUserUI();
-            showToast(`Welcome, ${name}!`);
-        }
+        signInNewUser(email, 'apple');
     }
 }
 
@@ -3082,29 +3097,11 @@ function emailSignIn() {
         return;
     }
 
-    // Check if this email already exists in known users
-    const knownUsers = getKnownUsers();
-    const existing = knownUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-
-    if (existing) {
-        // Welcome back!
-        currentUser = existing;
-        saveUser();
-        restoreUserData(existing.email);
-        closeAuthModal();
-        updateUserUI();
-        showToast(`Welcome back, ${existing.name}!`);
+    const known = getKnownUsers().find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (known) {
+        signInReturningUser(known, 'email');
     } else {
-        // New user — ask for name
-        const name = prompt('Welcome! What\'s your name?');
-        if (name) {
-            currentUser = { name, email, picture: null, provider: 'email' };
-            saveUser();
-            addKnownUser(currentUser);
-            closeAuthModal();
-            updateUserUI();
-            showToast(`Welcome, ${name}!`);
-        }
+        signInNewUser(email, 'email');
     }
 }
 
@@ -3115,12 +3112,19 @@ function getKnownUsers() {
     return JSON.parse(localStorage.getItem('sm2_knownUsers') || '[]');
 }
 
+function isNameTaken(name, excludeEmail) {
+    const users = getKnownUsers();
+    return users.some(u =>
+        u.name.toLowerCase() === name.toLowerCase() &&
+        (!excludeEmail || u.email.toLowerCase() !== excludeEmail.toLowerCase())
+    );
+}
+
 function addKnownUser(user) {
     const users = getKnownUsers();
     const exists = users.find(u => u.email.toLowerCase() === user.email.toLowerCase());
     if (exists) {
-        // Update name/picture if changed
-        exists.name = user.name;
+        // Update picture, keep name (already validated)
         exists.picture = user.picture || exists.picture;
         exists.lastLogin = new Date().toISOString();
     } else {
